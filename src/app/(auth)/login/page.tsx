@@ -7,18 +7,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, Eye, EyeOff } from "lucide-react";
+import { signIn } from "@/lib/auth/actions";
 
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    // TODO: Replace with Supabase auth when connected
-    await new Promise((r) => setTimeout(r, 800));
-    router.push("/dashboard");
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const result = await signIn(formData);
+
+    if (result && "error" in result && result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else if (result && "success" in result && result.success === "demo") {
+      const email = formData.get("email") as string;
+      localStorage.setItem(
+        "lifevault:profile",
+        JSON.stringify({ firstName: "", lastName: "", email, createdAt: new Date().toISOString() })
+      );
+      localStorage.setItem("lifevault:welcome-complete", "true");
+      router.push("/dashboard");
+    }
   }
 
   return (
@@ -44,6 +60,7 @@ export default function LoginPage() {
           <Label htmlFor="email">Email address</Label>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="you@example.com"
             required
@@ -64,6 +81,7 @@ export default function LoginPage() {
           <div className="relative">
             <Input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               required
@@ -72,7 +90,8 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -82,6 +101,12 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+
+        {error && (
+          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Signing in..." : "Sign in"}

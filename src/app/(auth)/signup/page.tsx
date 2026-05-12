@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Eye, EyeOff, Check } from "lucide-react";
+import { Shield, Eye, EyeOff, Check, Sparkles } from "lucide-react";
+import { signUp } from "@/lib/auth/actions";
+
+const planLabels: Record<string, { name: string; tagline: string }> = {
+  family: { name: "Family", tagline: "14-day free trial — no card required" },
+  legacy: { name: "Legacy", tagline: "14-day free trial — no card required" },
+};
 
 const passwordRequirements = [
   { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
@@ -14,18 +20,67 @@ const passwordRequirements = [
   { label: "One number", test: (p: string) => /\d/.test(p) },
 ];
 
+function passwordIsValid(p: string) {
+  return passwordRequirements.every((r) => r.test(p));
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; tagline: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const planKey = new URLSearchParams(window.location.search).get("plan") || "";
+    if (planLabels[planKey]) {
+      setSelectedPlan(planLabels[planKey]);
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (!passwordIsValid(password)) {
+      setError("Please choose a password that meets all the requirements below.");
+      return;
+    }
+
     setLoading(true);
-    // TODO: Replace with Supabase auth when connected
-    await new Promise((r) => setTimeout(r, 800));
-    router.push("/dashboard/welcome");
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const result = await signUp(formData);
+
+    if (result && "error" in result && result.error) {
+      setError(result.error);
+      setLoading(false);
+    } else if (result && "success" in result && result.success === "demo") {
+      const demo = result as {
+        success: "demo";
+        firstName: string;
+        lastName: string;
+        email: string;
+      };
+      localStorage.setItem(
+        "lifevault:profile",
+        JSON.stringify({
+          firstName: demo.firstName,
+          lastName: demo.lastName,
+          email: demo.email,
+          createdAt: new Date().toISOString(),
+        })
+      );
+      const planKey = new URLSearchParams(window.location.search).get("plan");
+      if (planKey === "family" || planKey === "legacy") {
+        localStorage.setItem("lifevault:plan", JSON.stringify(planKey));
+      }
+      router.push("/dashboard/welcome");
+    } else {
+      router.push("/verify-email");
+    }
   }
 
   return (
@@ -48,15 +103,41 @@ export default function SignupPage() {
         </p>
       </div>
 
+      {selectedPlan && (
+        <div className="mt-6 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 text-sm">
+            <p className="font-semibold text-foreground">
+              {selectedPlan.name} plan selected
+            </p>
+            <p className="text-xs text-muted-foreground">{selectedPlan.tagline}</p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="firstName">First name</Label>
-            <Input id="firstName" placeholder="First name" required />
+            <Input
+              id="firstName"
+              name="firstName"
+              placeholder="First name"
+              required
+              autoComplete="given-name"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="lastName">Last name</Label>
-            <Input id="lastName" placeholder="Last name" required />
+            <Input
+              id="lastName"
+              name="lastName"
+              placeholder="Last name"
+              required
+              autoComplete="family-name"
+            />
           </div>
         </div>
 
@@ -64,6 +145,7 @@ export default function SignupPage() {
           <Label htmlFor="email">Email address</Label>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="you@example.com"
             required
@@ -76,6 +158,7 @@ export default function SignupPage() {
           <div className="relative">
             <Input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Create a strong password"
               required
@@ -86,7 +169,8 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -96,25 +180,39 @@ export default function SignupPage() {
             </button>
           </div>
           {password && (
-            <ul className="mt-2 space-y-1">
-              {passwordRequirements.map((req) => (
-                <li
-                  key={req.label}
-                  className={`flex items-center gap-2 text-xs ${
-                    req.test(password)
-                      ? "text-green-600"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <Check className="h-3 w-3" />
-                  {req.label}
-                </li>
-              ))}
+            <ul className="mt-2 space-y-1" aria-label="Password requirements">
+              {passwordRequirements.map((req) => {
+                const passed = req.test(password);
+                return (
+                  <li
+                    key={req.label}
+                    className={`flex items-center gap-2 text-xs transition-colors ${
+                      passed ? "text-green-600" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Check
+                      className={`h-3 w-3 ${passed ? "opacity-100" : "opacity-40"}`}
+                    />
+                    {req.label}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        {error && (
+          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full"
+          size="lg"
+          disabled={loading || (password.length > 0 && !passwordIsValid(password))}
+        >
           {loading ? "Creating vault..." : "Create your vault"}
         </Button>
 

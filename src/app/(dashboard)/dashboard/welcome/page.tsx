@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,30 +10,41 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Shield, Heart, FolderLock, Users, ArrowRight } from "lucide-react";
+import { Shield, Heart, FolderLock, Users, ArrowRight, Wifi } from "lucide-react";
+import { PageTransition } from "@/components/motion/page-transition";
+
+const WELCOME_KEY = "lifevault:welcome-complete";
 
 const steps = [
   {
     icon: Heart,
     title: "Welcome to LifeVault",
     description:
-      "You've just taken an important step to protect your family. LifeVault helps you organise all your important documents in one safe place, so your loved ones aren't left guessing.",
+      "You've just taken an important step for your family. LifeVault is one place for everything your household shares — from WiFi passwords to important documents.",
     detail:
-      "Everything you store here is encrypted — that means only you (and the people you choose) can ever see it. Not even us.",
+      "Everything you store here is encrypted. Only you and the people you choose can ever see your data. Not even us.",
+  },
+  {
+    icon: Wifi,
+    title: "Start with the Family Hub",
+    description:
+      "Save the everyday things first — your WiFi password, streaming logins, and household details. Your family can access these anytime.",
+    detail:
+      "It takes about two minutes. Once your shared accounts are in, you'll never have to text someone a password again.",
   },
   {
     icon: FolderLock,
-    title: "How it works",
+    title: "Add legacy planning when you're ready",
     description:
-      "Think of LifeVault like a secure filing cabinet that your family can access when they need to. You'll upload important documents like your will, insurance policies, and bank details.",
+      "When the time feels right, you can upload important documents like your will, super details, and insurance policies. There's no rush — do it at your own pace.",
     detail:
-      "We'll guide you with simple checklists so you know exactly what to organise. There's no rush — you can do a little bit at a time.",
+      "We'll guide you with simple checklists so you know exactly what to organise. Your family won't be left guessing.",
   },
   {
     icon: Users,
     title: "You're in control",
     description:
-      "You choose who can see your documents and when. You might give your daughter full access now, or set things up so your son only gets access later.",
+      "Choose who can see what and when. Give your partner access to shared passwords now, or set documents to be released to trusted contacts later.",
     detail:
       "You can change these settings any time. Nothing happens without your permission.",
   },
@@ -43,11 +54,25 @@ export default function WelcomePage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem(WELCOME_KEY) === "true") {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
   const step = steps[currentStep];
   const isLast = currentStep === steps.length - 1;
 
+  function markComplete() {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(WELCOME_KEY, "true");
+    }
+  }
+
   function handleNext() {
     if (isLast) {
+      markComplete();
       router.push("/dashboard");
     } else {
       setCurrentStep((prev) => prev + 1);
@@ -55,10 +80,12 @@ export default function WelcomePage() {
   }
 
   function handleSkip() {
+    markComplete();
     router.push("/dashboard");
   }
 
   return (
+    <PageTransition>
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center pb-2">
@@ -108,8 +135,9 @@ export default function WelcomePage() {
 
       <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Shield className="h-4 w-4" />
-        Your data is protected by bank-grade encryption
+        Your data is protected by AES-256 encryption
       </div>
     </div>
+    </PageTransition>
   );
 }

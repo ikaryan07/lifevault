@@ -15,64 +15,69 @@ export function Footer() {
                 LifeVault
               </span>
             </Link>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Helping Australian families organise, protect, and pass on what
-              matters most.
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              One secure place for your family&apos;s passwords, household info,
+              and important documents. Built in Australia.
             </p>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-foreground">Product</h4>
-            <ul className="mt-3 space-y-2">
+            <p className="text-sm font-semibold text-foreground">Product</p>
+            <ul className="mt-3 space-y-2.5">
               <li>
-                <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">
+                <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   Features
                 </a>
               </li>
               <li>
-                <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground">
-                  Pricing
+                <a href="#how-it-works" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  How It Works
                 </a>
               </li>
               <li>
-                <a href="#security" className="text-sm text-muted-foreground hover:text-foreground">
+                <a href="#security" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   Security
                 </a>
               </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold text-foreground">Company</h4>
-            <ul className="mt-3 space-y-2">
               <li>
-                <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground">
-                  Blog
-                </Link>
+                <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  Pricing
+                </a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold text-foreground">Legal</h4>
-            <ul className="mt-3 space-y-2">
+            <p className="text-sm font-semibold text-foreground">Support</p>
+            <ul className="mt-3 space-y-2.5">
               <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
+                <a href="mailto:support@lifevault.com.au" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  Contact Us
+                </a>
+              </li>
+              <li>
+                <Link href="/login" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  Log In
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  Create Account
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-foreground">Legal</p>
+            <ul className="mt-3 space-y-2.5">
+              <li>
+                <Link href="/privacy" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/terms" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   Terms of Service
                 </Link>
               </li>
@@ -80,9 +85,14 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t pt-8 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} LifeVault. All rights reserved.
-          Made in Australia.
+        <div className="mt-12 flex flex-col items-center gap-3 border-t pt-8 sm:flex-row sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} LifeVault. All rights reserved.
+          </p>
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <span>🇦🇺</span>
+            Made with care in Australia
+          </p>
         </div>
       </div>
     </footer>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const plans = [
@@ -8,50 +8,55 @@ const plans = [
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Get started and see if LifeVault is right for you.",
+    description: "Try it out — no strings attached.",
     features: [
+      "5 shared passwords & logins",
+      "5 household info items",
       "5 document uploads",
       "1 trusted contact",
-      "Basic before-death checklist",
-      "Important contacts directory",
-      "256-bit encryption",
+      "Basic planning checklist",
+      "AES-256 encryption",
     ],
     cta: "Get Started",
     href: "/signup",
     highlighted: false,
   },
   {
-    name: "Premium",
-    price: "$8.99",
-    period: "per month",
-    description: "Full protection for you and your family.",
+    name: "Family",
+    price: "$6.99",
+    period: "/month",
+    description: "Everything your household needs, every day.",
     features: [
+      "Unlimited passwords & logins",
+      "Unlimited household info",
       "Unlimited documents",
-      "5 trusted contacts",
+      "Up to 6 family members",
       "All checklists and guides",
-      "Australian forms library",
       "Smart reminders",
       "Priority support",
-      "Digital asset register",
     ],
-    cta: "Start Free Trial",
-    href: "/signup?plan=premium",
+    cta: "Start 14-Day Free Trial",
+    href: "/signup?plan=family",
     highlighted: true,
+    badge: "Most Popular",
   },
   {
-    name: "Family",
-    price: "$14.99",
-    period: "per month",
-    description: "Cover the whole family. Up to 4 accounts.",
+    name: "Legacy",
+    price: "$12.99",
+    period: "/month",
+    description: "Complete protection for life and beyond.",
     features: [
-      "Everything in Premium",
-      "Up to 4 planner accounts",
-      "Shared family workspace",
-      "Executor task management",
+      "Everything in Family",
+      "10 trusted contacts",
+      "Encrypted video & audio messages",
+      "Emergency access QR card",
+      "Inactivity release trigger",
+      "Australian forms library",
+      "PDF vault export",
       "Phone support",
     ],
-    cta: "Start Free Trial",
-    href: "/signup?plan=family",
+    cta: "Start 14-Day Free Trial",
+    href: "/signup?plan=legacy",
     highlighted: false,
   },
 ];
@@ -65,7 +70,8 @@ export function Pricing() {
             Simple, honest pricing
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Start free. Upgrade when you&apos;re ready. Cancel anytime.
+            Start free. Upgrade when your family needs more.
+            No lock-in contracts. Cancel anytime.
           </p>
         </div>
 
@@ -73,38 +79,43 @@ export function Pricing() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border p-8 ${
+              className={cn(
+                "relative flex flex-col rounded-2xl border p-8 transition-all",
                 plan.highlighted
-                  ? "border-primary bg-background shadow-xl shadow-primary/10"
-                  : "bg-background"
-              }`}
+                  ? "border-primary bg-background shadow-2xl shadow-primary/10 ring-1 ring-primary/20 lg:scale-[1.04]"
+                  : "bg-background hover:border-border/80 hover:shadow-md"
+              )}
             >
               {plan.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground">
-                  Most Popular
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-lg">
+                  <Zap className="h-3 w-3" />
+                  {plan.badge}
                 </div>
               )}
 
-              <h3 className="text-lg font-semibold text-foreground">
-                {plan.name}
-              </h3>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-foreground">
-                  {plan.price}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {plan.period}
-                </span>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {plan.name}
+                </h3>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold tracking-tight text-foreground">
+                    {plan.price}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {plan.period}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {plan.description}
+                </p>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {plan.description}
-              </p>
 
               <Link
                 href={plan.href}
                 className={cn(
                   buttonVariants({
                     variant: plan.highlighted ? "default" : "outline",
+                    size: "lg",
                   }),
                   "mt-6 w-full"
                 )}
@@ -112,10 +123,10 @@ export function Pricing() {
                 {plan.cta}
               </Link>
 
-              <ul className="mt-8 space-y-3">
+              <ul className="mt-8 flex-1 space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
                     <span className="text-muted-foreground">{feature}</span>
                   </li>
                 ))}
@@ -123,6 +134,12 @@ export function Pricing() {
             </div>
           ))}
         </div>
+
+        <p className="mt-12 text-center text-sm text-muted-foreground">
+          All prices in AUD. All plans include AES-256 encryption, Australian data hosting, and no lock-in contracts.
+          <br className="hidden sm:block" />
+          Your data stays yours — always.
+        </p>
       </div>
     </section>
   );
