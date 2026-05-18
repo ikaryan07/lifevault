@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — LifeVault",
-  description: "The terms that apply when you use LifeVault.",
+  title: "Terms of Service — HomePin",
+  description: "The terms that apply when you use HomePin.",
 };
 
 export default function TermsPage() {
@@ -23,16 +23,16 @@ export default function TermsPage() {
 
       <section>
         <h2 className="text-xl font-semibold text-foreground">
-          Welcome to LifeVault
+          Welcome to HomePin
         </h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          By creating an account and using LifeVault, you agree to these
+          By creating an account and using HomePin, you agree to these
           terms. Please read them carefully. If anything&apos;s unclear, email{" "}
           <a
-            href="mailto:support@lifevault.com.au"
+            href="mailto:support@HomePin.com.au"
             className="text-primary underline"
           >
-            support@lifevault.com.au
+            support@HomePin.com.au
           </a>{" "}
           and we&apos;ll explain.
         </p>
@@ -42,7 +42,7 @@ export default function TermsPage() {
         <h2 className="text-xl font-semibold text-foreground">Your account</h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
           You&apos;re responsible for keeping your password safe. Because
-          LifeVault uses zero-knowledge encryption, we cannot recover your
+          HomePin uses zero-knowledge encryption, we cannot recover your
           encrypted data if you lose your password. We&apos;ll always remind
           you to set up a recovery method when you sign up.
         </p>
@@ -53,7 +53,7 @@ export default function TermsPage() {
           Acceptable use
         </h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          LifeVault is for personal and family use. You agree not to use the
+          HomePin is for personal and family use. You agree not to use the
           service to store illegal content, breach anyone&apos;s privacy, or
           attempt to compromise the security of our infrastructure.
         </p>
@@ -88,7 +88,7 @@ export default function TermsPage() {
           Limitation of liability
         </h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          LifeVault is provided &ldquo;as is&rdquo;. While we work hard to keep
+          HomePin is provided &ldquo;as is&rdquo;. While we work hard to keep
           the service running and your data safe, we can&apos;t guarantee
           uninterrupted service. Our liability is limited to the amount you
           paid us in the previous 12 months.
@@ -109,7 +109,7 @@ export default function TermsPage() {
         <h2 className="text-xl font-semibold text-foreground">Changes</h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
           We&apos;ll let you know by email before making any material changes
-          to these terms. Continued use of LifeVault after the changes take
+          to these terms. Continued use of HomePin after the changes take
           effect means you accept them.
         </p>
       </section>

@@ -35,7 +35,7 @@ const faqs = [
     icon: Mail,
     question: "I need help with something else",
     answer:
-      "No worries! You can email us anytime at support@lifevault.com.au and we'll get back to you within 24 hours. We're a small Australian team and we're happy to help.",
+      "No worries! You can email us anytime at support@HomePin.com.au and we'll get back to you within 24 hours. We're a small Australian team and we're happy to help.",
   },
 ];
 
@@ -66,7 +66,7 @@ export function HelpButton() {
           <DialogHeader>
             <DialogTitle>How can we help?</DialogTitle>
             <DialogDescription>
-              Common questions about LifeVault. If you need more help,
+              Common questions about HomePin. If you need more help,
               don&apos;t hesitate to reach out.
             </DialogDescription>
           </DialogHeader>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Shield,
+  MapPin,
   LayoutDashboard,
   FolderLock,
   Users,
@@ -90,10 +90,10 @@ export function Sidebar() {
     <aside className="hidden w-64 shrink-0 border-r bg-sidebar lg:flex lg:flex-col">
       <div className="flex h-16 items-center gap-2.5 border-b px-6">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <Shield className="h-4 w-4 text-primary-foreground" />
+          <MapPin className="h-4 w-4 text-primary-foreground" />
         </div>
         <span className="text-lg font-bold text-sidebar-foreground">
-          LifeVault
+          HomePin
         </span>
       </div>
 

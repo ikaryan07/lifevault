@@ -9,7 +9,7 @@ import { useI18n } from "@/lib/i18n/provider";
 import { PageTransition } from "@/components/motion/page-transition";
 import { toast } from "sonner";
 
-const STORAGE_KEY = "lifevault:accessibility";
+const STORAGE_KEY = "homepin:accessibility";
 
 interface AccessibilitySettings {
   fontSize: number;

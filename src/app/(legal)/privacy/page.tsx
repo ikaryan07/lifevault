@@ -3,9 +3,9 @@ import Link from "next/link";
 import { Shield, Lock, Server } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — LifeVault",
+  title: "Privacy Policy — HomePin",
   description:
-    "How LifeVault protects your privacy and keeps your family's data safe.",
+    "How HomePin protects your privacy and keeps your family's data safe.",
 };
 
 export default function PrivacyPage() {
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           The short version
         </h2>
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-          LifeVault was built on a simple principle: your family&apos;s most
+          HomePin was built on a simple principle: your family&apos;s most
           sensitive information should be readable only by you and the people
           you trust. We don&apos;t sell data, we don&apos;t track you across
           the web, and we cannot read the contents of your vault.
@@ -108,10 +108,10 @@ export default function PrivacyPage() {
           access, correct, or request deletion of your personal information.
           Contact us at{" "}
           <a
-            href="mailto:privacy@lifevault.com.au"
+            href="mailto:privacy@HomePin.com.au"
             className="text-primary underline"
           >
-            privacy@lifevault.com.au
+            privacy@HomePin.com.au
           </a>{" "}
           for any privacy enquiry.
         </p>
@@ -122,10 +122,10 @@ export default function PrivacyPage() {
         <p className="mt-3 text-base leading-relaxed text-muted-foreground">
           Questions about this policy? Email{" "}
           <a
-            href="mailto:privacy@lifevault.com.au"
+            href="mailto:privacy@HomePin.com.au"
             className="text-primary underline"
           >
-            privacy@lifevault.com.au
+            privacy@HomePin.com.au
           </a>
           .
         </p>

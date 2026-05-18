@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Shield className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">LifeVault</span>
+          <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <Mail className="h-8 w-8 text-primary" />
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
         <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
           {isSupabaseConfigured
             ? "We've sent you a link to reset your password. It may take a minute to arrive — check your spam folder if you don't see it."
-            : "Password reset emails are only sent when LifeVault is connected to Supabase. In demo mode, just sign in with your email to continue."}
+            : "Password reset emails are only sent when HomePin is connected to Supabase. In demo mode, just sign in with your email to continue."}
         </p>
         <Link
           href="/login"
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Shield className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">LifeVault</span>
+          <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
       </div>
 

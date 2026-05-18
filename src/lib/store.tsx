@@ -167,39 +167,39 @@ const VaultContext = createContext<VaultStore | null>(null);
 
 export function VaultProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile, h1] = useLocalStorage<UserProfile | null>(
-    "lifevault:profile",
+    "HomePin:profile",
     null
   );
   const [planId, setPlanIdRaw, h0] = useLocalStorage<PlanId>(
-    "lifevault:plan",
+    "HomePin:plan",
     "free"
   );
   const [documents, setDocuments, h2] = useLocalStorage<StoredDocument[]>(
-    "lifevault:documents",
+    "HomePin:documents",
     []
   );
   const [trustedContacts, setTrustedContacts, h3] = useLocalStorage<TrustedContact[]>(
-    "lifevault:trusted-contacts",
+    "HomePin:trusted-contacts",
     []
   );
   const [importantContacts, setImportantContacts, h4] = useLocalStorage<ImportantContact[]>(
-    "lifevault:important-contacts",
+    "HomePin:important-contacts",
     []
   );
   const [digitalAssets, setDigitalAssets, h5] = useLocalStorage<StoredDigitalAsset[]>(
-    "lifevault:digital-assets",
+    "HomePin:digital-assets",
     []
   );
   const [checklist, setChecklist, h6] = useLocalStorage<StoredChecklistState>(
-    "lifevault:checklist",
+    "HomePin:checklist",
     { before: {}, after: {} }
   );
   const [sharedCredentials, setSharedCredentials, h7] = useLocalStorage<SharedCredential[]>(
-    "lifevault:shared-credentials",
+    "HomePin:shared-credentials",
     []
   );
   const [householdInfo, setHouseholdInfo, h8] = useLocalStorage<HouseholdItem[]>(
-    "lifevault:household-info",
+    "HomePin:household-info",
     []
   );
 

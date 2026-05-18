@@ -72,7 +72,7 @@ export function FAQ() {
             Frequently asked questions
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Everything you need to know about LifeVault.
+            Everything you need to know about HomePin.
           </p>
         </div>
 

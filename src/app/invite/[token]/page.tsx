@@ -26,7 +26,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               This invitation link is invalid or has already been used.
             </p>
             <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
-              Go to LifeVault
+              Go to HomePin
             </Link>
           </CardContent>
         </Card>
@@ -51,7 +51,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
               You&apos;ve already accepted this invitation from {ownerName}.
             </p>
             <Link href="/login" className={cn(buttonVariants(), "mt-4")}>
-              Sign in to LifeVault
+              Sign in to HomePin
             </Link>
           </CardContent>
         </Card>
@@ -70,7 +70,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-center text-muted-foreground">
-            <strong>{ownerName}</strong> has added you as a trusted contact on LifeVault.
+            <strong>{ownerName}</strong> has added you as a trusted contact on HomePin.
             This means they trust you to help manage their important documents when the time comes.
           </p>
           <div className="rounded-lg border bg-muted/50 p-3 text-sm">

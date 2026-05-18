@@ -13,14 +13,14 @@ import {
 import { Shield, Heart, FolderLock, Users, ArrowRight, Wifi } from "lucide-react";
 import { PageTransition } from "@/components/motion/page-transition";
 
-const WELCOME_KEY = "lifevault:welcome-complete";
+const WELCOME_KEY = "homepin:welcome-complete";
 
 const steps = [
   {
     icon: Heart,
-    title: "Welcome to LifeVault",
+    title: "Welcome to HomePin",
     description:
-      "You've just taken an important step for your family. LifeVault is one place for everything your household shares — from WiFi passwords to important documents.",
+      "You've just taken an important step for your family. HomePin is one place for everything your household shares — from WiFi passwords to important documents.",
     detail:
       "Everything you store here is encrypted. Only you and the people you choose can ever see your data. Not even us.",
   },

@@ -65,7 +65,7 @@ export default function SignupPage() {
         email: string;
       };
       localStorage.setItem(
-        "lifevault:profile",
+        "homepin:profile",
         JSON.stringify({
           firstName: demo.firstName,
           lastName: demo.lastName,
@@ -75,7 +75,7 @@ export default function SignupPage() {
       );
       const planKey = new URLSearchParams(window.location.search).get("plan");
       if (planKey === "family" || planKey === "legacy") {
-        localStorage.setItem("lifevault:plan", JSON.stringify(planKey));
+        localStorage.setItem("homepin:plan", JSON.stringify(planKey));
       }
       router.push("/dashboard/welcome");
     } else {
@@ -90,7 +90,7 @@ export default function SignupPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Shield className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">LifeVault</span>
+          <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
       </div>
 

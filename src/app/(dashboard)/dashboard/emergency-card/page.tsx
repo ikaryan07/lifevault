@@ -53,7 +53,7 @@ export default function EmergencyCardPage() {
     window.print();
   }
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://lifevault.com.au";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://homepin.com.au";
   const qrUrl = `${origin}/vault-access?id=${userId}`;
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
@@ -93,7 +93,7 @@ export default function EmergencyCardPage() {
             <CardContent className="space-y-6 p-8 text-center">
               <div className="flex items-center justify-center gap-2">
                 <Shield className="h-6 w-6 text-primary" />
-                <span className="text-xl font-bold">LifeVault</span>
+                <span className="text-xl font-bold">HomePin</span>
               </div>
 
               <div>
@@ -131,7 +131,7 @@ export default function EmergencyCardPage() {
                   Or visit: {qrUrl}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  lifevault.com.au &middot; Secure planning for Australian families
+                  homepin.com.au &middot; Secure planning for Australian families
                 </p>
               </div>
             </CardContent>

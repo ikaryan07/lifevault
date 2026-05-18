@@ -53,7 +53,7 @@ export function Hero() {
 
             <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
               Stop texting WiFi passwords and hunting for Netflix logins.
-              LifeVault keeps your family&apos;s shared accounts, household info,
+              HomePin keeps your family&apos;s shared accounts, household info,
               and important documents in one secure place — today and for the future.
             </p>
 
@@ -104,7 +104,7 @@ export function Hero() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
                     <Shield className="h-3.5 w-3.5 text-primary-foreground" />
                   </div>
-                  <span className="text-sm font-bold">LifeVault</span>
+                  <span className="text-sm font-bold">HomePin</span>
                   <div className="ml-auto flex gap-1">
                     <div className="h-2 w-2 rounded-full bg-red-400" />
                     <div className="h-2 w-2 rounded-full bg-yellow-400" />

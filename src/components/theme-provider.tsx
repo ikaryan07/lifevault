@@ -29,12 +29,12 @@ export function ThemeProvider({
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const stored = localStorage.getItem("lifevault:theme") as Theme | null;
+    const stored = localStorage.getItem("HomePin:theme") as Theme | null;
     if (stored) setTheme(stored);
 
     // Bootstrap accessibility preferences from storage so they persist across loads.
     try {
-      const a11y = localStorage.getItem("lifevault:accessibility");
+      const a11y = localStorage.getItem("HomePin:accessibility");
       if (a11y) {
         const settings = JSON.parse(a11y);
         if (settings.fontSize) {
@@ -71,7 +71,7 @@ export function ThemeProvider({
     }
 
     applyTheme(theme);
-    localStorage.setItem("lifevault:theme", theme);
+    localStorage.setItem("HomePin:theme", theme);
 
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     function handleChange() {

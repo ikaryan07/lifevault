@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <!-- House roof -->
+  <path d="M256 120 L370 210 L370 370 Q370 385 355 385 L157 385 Q142 385 142 370 L142 210 Z" fill="white" fill-opacity="0.15"/>
+  <!-- Pin body -->
+  <path d="M256 100 C208 100 172 136 172 180 C172 240 256 320 256 320 C256 320 340 240 340 180 C340 136 304 100 256 100Z" fill="white"/>
+  <!-- Pin inner circle (keyhole top) -->
+  <circle cx="256" cy="176" r="40" fill="#0f766e"/>
+  <!-- Keyhole slot -->
+  <path d="M248 195 L248 230 Q248 238 256 238 Q264 238 264 230 L264 195" fill="#0f766e"/>
+  <!-- Pin shadow/point -->
+  <path d="M249 310 L256 340 L263 310" fill="white" fill-opacity="0.7"/>
+</svg>

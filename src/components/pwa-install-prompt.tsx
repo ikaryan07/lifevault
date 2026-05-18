@@ -17,7 +17,7 @@ export function PWAInstallPrompt() {
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e);
-      const dismissed = localStorage.getItem("lifevault:pwa-dismissed");
+      const dismissed = localStorage.getItem("HomePin:pwa-dismissed");
       if (!dismissed) {
         setShow(true);
       }
@@ -39,7 +39,7 @@ export function PWAInstallPrompt() {
 
   function handleDismiss() {
     setShow(false);
-    localStorage.setItem("lifevault:pwa-dismissed", "true");
+    localStorage.setItem("HomePin:pwa-dismissed", "true");
   }
 
   return (
@@ -56,7 +56,7 @@ export function PWAInstallPrompt() {
               <Download className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">Install LifeVault</p>
+              <p className="text-sm font-medium">Install HomePin</p>
               <p className="text-xs text-muted-foreground">
                 Add to your home screen for quick access
               </p>

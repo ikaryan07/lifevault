@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield, Wifi, FolderLock, Heart } from "lucide-react";
+import { MapPin, Wifi, FolderLock, Heart } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -11,10 +11,10 @@ export default function AuthLayout({
       <div className="hidden w-1/2 bg-gradient-to-br from-primary via-primary to-primary/80 lg:flex lg:flex-col lg:justify-between lg:p-12">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+            <MapPin className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-primary-foreground">
-            LifeVault
+            HomePin
           </span>
         </Link>
 
@@ -24,7 +24,7 @@ export default function AuthLayout({
               Everything your family needs, in one secure place.
             </h2>
             <p className="mt-3 text-base leading-relaxed text-primary-foreground/80">
-              From WiFi passwords to wills — LifeVault keeps your household
+              From WiFi passwords to wills — HomePin keeps your household
               running smoothly today, and protects the people you love for the future.
             </p>
           </div>
@@ -46,7 +46,7 @@ export default function AuthLayout({
         </div>
 
         <p className="text-xs text-primary-foreground/50">
-          &copy; {new Date().getFullYear()} LifeVault. All rights reserved. Made in Australia.
+          &copy; {new Date().getFullYear()} HomePin. All rights reserved. Made in Australia.
         </p>
       </div>
 

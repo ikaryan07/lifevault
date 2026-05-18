@@ -12,7 +12,7 @@ export function Footer() {
                 <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold text-foreground">
-                LifeVault
+                HomePin
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -51,7 +51,7 @@ export function Footer() {
             <p className="text-sm font-semibold text-foreground">Support</p>
             <ul className="mt-3 space-y-2.5">
               <li>
-                <a href="mailto:support@lifevault.com.au" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                <a href="mailto:support@HomePin.com.au" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                   Contact Us
                 </a>
               </li>
@@ -87,7 +87,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center gap-3 border-t pt-8 sm:flex-row sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} LifeVault. All rights reserved.
+            &copy; {new Date().getFullYear()} HomePin. All rights reserved.
           </p>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <span>🇦🇺</span>

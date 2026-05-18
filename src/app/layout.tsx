@@ -12,12 +12,12 @@ const inter = Inter({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#1a5276",
+  themeColor: "#0d9488",
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lifevault.com.au"),
-  title: "LifeVault — Your Family's Passwords & Future, Secured",
+  metadataBase: new URL("https://homepin.com.au"),
+  title: "HomePin — Your Family's Passwords & Future, Secured",
   description:
     "One secure place for your family's shared passwords, household info, and important documents. Plus complete end-of-life planning. Australian-made.",
   keywords: [
@@ -32,22 +32,22 @@ export const metadata: Metadata = {
   ],
   manifest: "/manifest.json",
   openGraph: {
-    title: "LifeVault — Your Family's Passwords & Future, Secured",
+    title: "HomePin — Your Family's Passwords & Future, Secured",
     description:
       "One secure place for your family's shared passwords, household info, and important documents. Plus complete end-of-life planning.",
-    url: "https://lifevault.com.au",
-    siteName: "LifeVault",
+    url: "https://homepin.com.au",
+    siteName: "HomePin",
     locale: "en_AU",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LifeVault — Your Family's Passwords & Future, Secured",
+    title: "HomePin — Your Family's Passwords & Future, Secured",
     description:
       "One secure place for your family's shared passwords, household info, and important documents. Australian-made.",
   },
   alternates: {
-    canonical: "https://lifevault.com.au",
+    canonical: "https://homepin.com.au",
   },
 };
 
@@ -59,9 +59,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("lifevault:theme");if(t==="dark"||(t==="system"||!t)&&matchMedia("(prefers-color-scheme:dark)").matches)document.documentElement.classList.add("dark")}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem("homepin:theme");if(t==="dark"||(t==="system"||!t)&&matchMedia("(prefers-color-scheme:dark)").matches)document.documentElement.classList.add("dark")}catch(e){}})()`,
           }}
         />
       </head>

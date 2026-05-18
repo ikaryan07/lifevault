@@ -56,11 +56,11 @@ export async function GET(request: Request) {
     try {
       await sendEmail({
         to: profile.email,
-        subject: `LifeVault: Some of your documents may need reviewing`,
+        subject: `HomePin: Some of your documents may need reviewing`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">LifeVault</h1>
+              <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">HomePin</h1>
             </div>
             <div style="background: #f8f9fa; border-radius: 12px; padding: 30px;">
               <h2 style="color: #1a1a2e; margin-top: 0;">Hi ${profile.first_name},</h2>

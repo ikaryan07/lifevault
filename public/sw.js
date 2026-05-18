@@ -1,4 +1,4 @@
-const CACHE_NAME = "lifevault-v1";
+const CACHE_NAME = "HomePin-v1";
 const STATIC_ASSETS = [
   "/",
   "/login",

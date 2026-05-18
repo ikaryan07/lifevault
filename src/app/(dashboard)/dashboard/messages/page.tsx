@@ -37,7 +37,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "lifevault:messages";
+const STORAGE_KEY = "homepin:messages";
 
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) return fallback;

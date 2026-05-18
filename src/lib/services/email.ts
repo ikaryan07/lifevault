@@ -19,7 +19,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "LifeVault <notifications@lifevault.com.au>",
+      from: "HomePin <notifications@HomePin.com.au>",
       to,
       subject,
       html,
@@ -37,17 +37,17 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
 export function invitationEmail(inviterName: string, token: string) {
   const acceptUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/invite/${token}`;
   return {
-    subject: `${inviterName} has added you as a trusted contact on LifeVault`,
+    subject: `${inviterName} has added you as a trusted contact on HomePin`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">LifeVault</h1>
+          <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">HomePin</h1>
           <p style="color: #666; margin-top: 5px;">Secure end-of-life planning</p>
         </div>
         <div style="background: #f8f9fa; border-radius: 12px; padding: 30px;">
           <h2 style="color: #1a1a2e; margin-top: 0;">You've been trusted</h2>
           <p style="color: #444; line-height: 1.6;">
-            <strong>${inviterName}</strong> has added you as a trusted contact on LifeVault. 
+            <strong>${inviterName}</strong> has added you as a trusted contact on HomePin. 
             This means they trust you to help manage their important documents and information 
             when the time comes.
           </p>
@@ -66,7 +66,7 @@ export function invitationEmail(inviterName: string, token: string) {
           </p>
         </div>
         <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
-          LifeVault — Helping Australian families plan ahead. lifevault.com.au
+          HomePin — Helping Australian families plan ahead. HomePin.com.au
         </p>
       </div>
     `,
@@ -76,16 +76,16 @@ export function invitationEmail(inviterName: string, token: string) {
 export function checkInReminderEmail(userName: string, daysSinceLogin: number) {
   const checkInUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/login`;
   return {
-    subject: `LifeVault check-in: Are you okay, ${userName}?`,
+    subject: `HomePin check-in: Are you okay, ${userName}?`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">LifeVault</h1>
+          <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">HomePin</h1>
         </div>
         <div style="background: #f8f9fa; border-radius: 12px; padding: 30px;">
           <h2 style="color: #1a1a2e; margin-top: 0;">Hi ${userName},</h2>
           <p style="color: #444; line-height: 1.6;">
-            It's been ${daysSinceLogin} days since you last logged into LifeVault. 
+            It's been ${daysSinceLogin} days since you last logged into HomePin. 
             Just checking in to make sure everything is okay.
           </p>
           <p style="color: #444; line-height: 1.6;">
@@ -105,11 +105,11 @@ export function checkInReminderEmail(userName: string, daysSinceLogin: number) {
 
 export function vaultAccessRequestEmail(ownerName: string, requesterName: string) {
   return {
-    subject: `Vault access requested for ${ownerName}'s LifeVault`,
+    subject: `Vault access requested for ${ownerName}'s HomePin`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">LifeVault</h1>
+          <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">HomePin</h1>
         </div>
         <div style="background: #fff3cd; border-radius: 12px; padding: 30px; border: 1px solid #ffc107;">
           <h2 style="color: #1a1a2e; margin-top: 0;">Vault Access Request</h2>

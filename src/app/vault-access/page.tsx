@@ -12,12 +12,12 @@ export default function VaultAccessPage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <Shield className="h-7 w-7 text-primary" />
           </div>
-          <CardTitle className="text-2xl">LifeVault Access Request</CardTitle>
+          <CardTitle className="text-2xl">HomePin Access Request</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-center text-muted-foreground">
             If someone you love has passed away or become incapacitated, you can request
-            access to their LifeVault. This process is designed to be secure while still
+            access to their HomePin. This process is designed to be secure while still
             being accessible when it matters most.
           </p>
 
@@ -57,10 +57,10 @@ export default function VaultAccessPage() {
           <p className="text-center text-xs text-muted-foreground">
             Need help?{" "}
             <a
-              href="mailto:support@lifevault.com.au"
+              href="mailto:support@homepin.com.au"
               className="text-primary underline-offset-2 hover:underline"
             >
-              support@lifevault.com.au
+              support@homepin.com.au
             </a>
           </p>
         </CardContent>

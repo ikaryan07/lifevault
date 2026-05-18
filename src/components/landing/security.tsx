@@ -46,7 +46,7 @@ export function Security() {
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             You&apos;re trusting us with your family&apos;s most sensitive information.
-            We built LifeVault so that even we can&apos;t access your data.
+            We built HomePin so that even we can&apos;t access your data.
           </p>
         </div>
 

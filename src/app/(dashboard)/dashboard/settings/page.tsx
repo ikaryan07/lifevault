@@ -44,8 +44,8 @@ interface NotificationPrefs {
   access: boolean;
 }
 
-const NOTIFICATION_KEY = "lifevault:notifications";
-const CHECKIN_KEY = "lifevault:checkin-days";
+const NOTIFICATION_KEY = "homepin:notifications";
+const CHECKIN_KEY = "homepin:checkin-days";
 
 function safeParse<T>(value: string | null, fallback: T): T {
   if (!value) return fallback;
@@ -210,7 +210,7 @@ export default function SettingsPage() {
         const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.startsWith("lifevault")) {
+          if (key && key.startsWith("homepin")) {
             keysToRemove.push(key);
           }
         }
@@ -226,7 +226,7 @@ export default function SettingsPage() {
     // Real Supabase path - actual deletion requires server-side handling
     toast.error("Account deletion in progress", {
       description:
-        "We've started the deletion process. You'll receive a confirmation email shortly. For immediate help, contact support@lifevault.com.au.",
+        "We've started the deletion process. You'll receive a confirmation email shortly. For immediate help, contact support@homepin.com.au.",
     });
     setDeleteDialogOpen(false);
   }
@@ -453,7 +453,7 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium">Accessibility settings</p>
                 <p className="text-xs text-muted-foreground">
-                  Make LifeVault easier to read and use.
+                  Make HomePin easier to read and use.
                 </p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />

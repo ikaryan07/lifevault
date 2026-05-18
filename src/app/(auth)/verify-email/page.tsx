@@ -10,7 +10,7 @@ export default function VerifyEmailPage() {
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
           <Shield className="h-5 w-5 text-primary-foreground" />
         </div>
-        <span className="text-xl font-bold text-foreground">LifeVault</span>
+        <span className="text-xl font-bold text-foreground">HomePin</span>
       </Link>
 
       <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Eye, EyeOff } from "lucide-react";
+import { MapPin, Eye, EyeOff } from "lucide-react";
 import { signIn } from "@/lib/auth/actions";
 
 export default function LoginPage() {
@@ -29,10 +29,10 @@ export default function LoginPage() {
     } else if (result && "success" in result && result.success === "demo") {
       const email = formData.get("email") as string;
       localStorage.setItem(
-        "lifevault:profile",
+        "homepin:profile",
         JSON.stringify({ firstName: "", lastName: "", email, createdAt: new Date().toISOString() })
       );
-      localStorage.setItem("lifevault:welcome-complete", "true");
+      localStorage.setItem("homepin:welcome-complete", "true");
       router.push("/dashboard");
     }
   }
@@ -42,9 +42,9 @@ export default function LoginPage() {
       <div className="mb-8 lg:hidden">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+            <MapPin className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">LifeVault</span>
+          <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
       </div>
 
