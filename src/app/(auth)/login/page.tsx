@@ -12,6 +12,7 @@ import {
   signInClient,
 } from "@/lib/auth/client";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { getSiteUrl } from "@/lib/auth/site-url";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -94,6 +95,11 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Log in to access your vault and manage your documents.
+        </p>
+        <p className="mt-2 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+          On your phone, go directly to{" "}
+          <strong className="text-foreground">{getSiteUrl()}/login</strong> — do not use old
+          email links if Safari says it can&apos;t open the page.
         </p>
       </div>
 

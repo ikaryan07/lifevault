@@ -10,8 +10,11 @@ export function PWAInstallPrompt() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    // Service worker caused broken auth redirects on mobile Safari — unregister stale workers
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(console.error);
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      });
     }
 
     const handler = (e: Event) => {

@@ -13,6 +13,7 @@ import { Users, Copy, Check, Crown, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import type { FamilyInfo } from "@/lib/actions/family-hub";
+import { joinFamilyUrl } from "@/lib/auth/site-url";
 
 export default function FamilyMembersPage() {
   const { cloudMode, family: contextFamily, refreshCloud } = useVault();
@@ -61,10 +62,7 @@ export default function FamilyMembersPage() {
     );
   }
 
-  const inviteUrl =
-    typeof window !== "undefined" && family
-      ? `${window.location.origin}/join-family?code=${family.inviteCode}`
-      : "";
+  const inviteUrl = family ? joinFamilyUrl(family.inviteCode) : "";
 
   async function copyInvite() {
     if (!inviteUrl) return;
