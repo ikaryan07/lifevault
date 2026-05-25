@@ -9,12 +9,8 @@ import {
   migrateLegacyStorageKeys,
   storageKeys,
 } from "@/lib/storage-keys";
+import { authCallbackUrl } from "@/lib/auth/site-url";
 import type { UserProfile } from "@/lib/store";
-
-const siteUrl =
-  typeof window !== "undefined"
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export async function signInClient(email: string, password: string) {
   if (!isSupabaseConfigured()) {
@@ -55,7 +51,7 @@ export async function signUpClient(
     password,
     options: {
       data: { first_name: firstName.trim(), last_name: lastName.trim() },
-      emailRedirectTo: `${siteUrl}/auth/callback?next=/dashboard/welcome`,
+      emailRedirectTo: authCallbackUrl("/dashboard/welcome"),
     },
   });
 
@@ -93,7 +89,7 @@ export async function resetPasswordClient(email: string) {
 
   const supabase = createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${siteUrl}/auth/callback?next=/dashboard/settings`,
+    redirectTo: authCallbackUrl("/dashboard/settings"),
   });
 
   if (error) {
@@ -113,7 +109,7 @@ export async function resendVerificationEmail(email: string) {
     type: "signup",
     email: email.trim(),
     options: {
-      emailRedirectTo: `${siteUrl}/auth/callback?next=/dashboard/welcome`,
+      emailRedirectTo: authCallbackUrl("/dashboard/welcome"),
     },
   });
 

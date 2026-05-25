@@ -24,9 +24,10 @@ If you already ran step 1 and get "policy already exists" errors, run only `supa
 In Supabase **Authentication → URL configuration**:
 
 - **Site URL**: `http://localhost:3000` (dev) or your production URL (e.g. `https://homepin.vercel.app`)
-- **Redirect URLs** — add both:
+- **Redirect URLs** — add all of these:
   - `http://localhost:3000/auth/callback`
-  - `https://your-domain.com/auth/callback`
+  - `https://homepin.vercel.app/auth/callback`
+  - `https://homepin.vercel.app/**` *(wildcard — covers links with extra params)*
 
 Enable **Email** provider.
 
