@@ -30,27 +30,33 @@ type LocalSnapshot = {
   checklist: StoredChecklistState;
 };
 
+type LegacySetters = {
+  setTrustedContacts: (v: TrustedContact[] | ((p: TrustedContact[]) => TrustedContact[])) => void;
+  setImportantContacts: (v: ImportantContact[] | ((p: ImportantContact[]) => ImportantContact[])) => void;
+  setDigitalAssets: (v: StoredDigitalAsset[] | ((p: StoredDigitalAsset[]) => StoredDigitalAsset[])) => void;
+  setDocuments: (v: StoredDocument[] | ((p: StoredDocument[]) => StoredDocument[])) => void;
+  setChecklist: (v: StoredChecklistState | ((p: StoredChecklistState) => StoredChecklistState)) => void;
+};
+
 export function useLegacyCloud(
-  setters: {
-    setTrustedContacts: (v: TrustedContact[] | ((p: TrustedContact[]) => TrustedContact[])) => void;
-    setImportantContacts: (v: ImportantContact[] | ((p: ImportantContact[]) => ImportantContact[])) => void;
-    setDigitalAssets: (v: StoredDigitalAsset[] | ((p: StoredDigitalAsset[]) => StoredDigitalAsset[])) => void;
-    setDocuments: (v: StoredDocument[] | ((p: StoredDocument[]) => StoredDocument[])) => void;
-    setChecklist: (v: StoredChecklistState | ((p: StoredChecklistState) => StoredChecklistState)) => void;
-  },
+  setters: LegacySetters,
   localSnapshot: LocalSnapshot,
   isLocalHydrated: boolean,
   familyCloudSynced: boolean
 ) {
   const { user, loading: authLoading } = useUser();
   const [legacySynced, setLegacySynced] = useState(false);
+  const settersRef = useRef(setters);
   const localRef = useRef(localSnapshot);
-  localRef.current = localSnapshot;
   const migratedRef = useRef(false);
+  const initialSyncDoneRef = useRef(false);
+
+  settersRef.current = setters;
+  localRef.current = localSnapshot;
 
   const cloudMode = isSupabaseConfigured() && !!user;
 
-  const refreshLegacy = useCallback(async () => {
+  const refreshLegacy = useCallback(async (force = false) => {
     if (!cloudMode) return;
 
     try {
@@ -60,18 +66,19 @@ export function useLegacyCloud(
       }
       const data = await fetchLegacyVaultData();
       if (data) {
-        setters.setTrustedContacts(data.trustedContacts);
-        setters.setImportantContacts(data.importantContacts);
-        setters.setDigitalAssets(data.digitalAssets);
-        setters.setDocuments(data.documents);
-        setters.setChecklist(data.checklist);
+        settersRef.current.setTrustedContacts(data.trustedContacts);
+        settersRef.current.setImportantContacts(data.importantContacts);
+        settersRef.current.setDigitalAssets(data.digitalAssets);
+        settersRef.current.setDocuments(data.documents);
+        settersRef.current.setChecklist(data.checklist);
       }
+      if (force) initialSyncDoneRef.current = true;
     } catch (e) {
       console.error("Legacy cloud sync failed:", e);
     } finally {
       setLegacySynced(true);
     }
-  }, [cloudMode, setters]);
+  }, [cloudMode]);
 
   useEffect(() => {
     if (!isLocalHydrated || authLoading) return;
@@ -79,9 +86,9 @@ export function useLegacyCloud(
       setLegacySynced(true);
       return;
     }
-    if (familyCloudSynced) {
-      refreshLegacy();
-    }
+    if (!familyCloudSynced || initialSyncDoneRef.current) return;
+    initialSyncDoneRef.current = true;
+    refreshLegacy();
   }, [cloudMode, isLocalHydrated, authLoading, familyCloudSynced, refreshLegacy]);
 
   const removeTrusted = useCallback(
@@ -150,7 +157,7 @@ export function useLegacyCloud(
 
   return {
     legacySynced,
-    refreshLegacy,
+    refreshLegacy: () => refreshLegacy(true),
     removeTrusted,
     upsertImportant,
     removeImportant,

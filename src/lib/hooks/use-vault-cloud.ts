@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useUser } from "@/lib/auth/hooks";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import {
@@ -23,6 +23,7 @@ export function useVaultCloud(
   const [family, setFamily] = useState<FamilyInfo | null>(null);
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudSynced, setCloudSynced] = useState(false);
+  const initialSyncDoneRef = useRef(false);
 
   const cloudMode = isSupabaseConfigured() && !!user;
 
@@ -47,11 +48,13 @@ export function useVaultCloud(
 
   useEffect(() => {
     if (!isLocalHydrated || authLoading) return;
-    if (cloudMode) {
-      refreshCloud();
-    } else {
+    if (!cloudMode) {
       setCloudSynced(true);
+      return;
     }
+    if (initialSyncDoneRef.current) return;
+    initialSyncDoneRef.current = true;
+    refreshCloud();
   }, [cloudMode, isLocalHydrated, authLoading, refreshCloud]);
 
   const upsertCredential = useCallback(

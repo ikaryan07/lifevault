@@ -6,6 +6,7 @@ import { GentleGuide } from "@/components/dashboard/gentle-guide";
 import { CloudBanner } from "@/components/dashboard/cloud-banner";
 import { CheckInTracker } from "@/components/dashboard/check-in-tracker";
 import { VaultProvider } from "@/lib/store";
+import { UserProvider } from "@/lib/auth/user-provider";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
+    <UserProvider>
     <VaultProvider>
       <CheckInTracker />
       <div className="flex h-screen flex-col lg:flex-row">
@@ -31,5 +33,6 @@ export default function DashboardLayout({
         <HelpButton />
       </div>
     </VaultProvider>
+    </UserProvider>
   );
 }
