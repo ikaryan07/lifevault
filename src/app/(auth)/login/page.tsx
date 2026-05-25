@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
+  const [signupHref, setSignupHref] = useState("/signup");
 
   useEffect(() => {
     async function init() {
@@ -32,6 +33,12 @@ export default function LoginPage() {
 
       if (params.get("force") === "1") {
         await prepareFreshLogin();
+      }
+
+      const next = params.get("next") ?? "";
+      const joinMatch = next.match(/^\/join-family\/([a-z0-9]+)$/i);
+      if (joinMatch) {
+        setSignupHref(`/signup?join=${encodeURIComponent(joinMatch[1])}`);
       }
 
       setReady(true);
@@ -166,7 +173,7 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        <Link href={signupHref} className="font-medium text-primary hover:underline">
           Create one
         </Link>
       </p>

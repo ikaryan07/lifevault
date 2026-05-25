@@ -35,20 +35,37 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+
+  // Old invite links used ?code= — messaging apps often strip query strings when sharing
+  if (pathname === "/join-family") {
+    const legacyCode = request.nextUrl.searchParams.get("code");
+    if (legacyCode) {
+      const normalized = legacyCode.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (normalized) {
+        const url = request.nextUrl.clone();
+        url.pathname = `/join-family/${normalized}`;
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
+  const isJoinFamily =
+    pathname === "/join-family" || pathname.startsWith("/join-family/");
   const isAuthPage = pathname === "/login" || pathname === "/signup";
   const isProtected =
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
-    pathname === "/join-family";
+    isJoinFamily;
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
-    url.pathname = pathname === "/join-family" ? "/login" : "/login";
+    url.pathname = "/login";
     url.searchParams.set(
       "next",
       `${request.nextUrl.pathname}${request.nextUrl.search}`
     );
-    if (pathname === "/join-family") {
+    if (isJoinFamily) {
       url.searchParams.set("force", "1");
     }
     return NextResponse.redirect(url);
@@ -72,5 +89,6 @@ export const config = {
     "/login",
     "/signup",
     "/join-family",
+    "/join-family/:path*",
   ],
 };

@@ -42,9 +42,17 @@ export function authCallbackUrl(next?: string): string {
   return base;
 }
 
+export function normalizeInviteCode(code: string): string {
+  return code.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+export function joinFamilyPath(inviteCode: string): string {
+  const code = normalizeInviteCode(inviteCode);
+  return code ? `/join-family/${code}` : "/join-family";
+}
+
 export function joinFamilyUrl(inviteCode: string): string {
-  const code = inviteCode.trim().toLowerCase();
-  return `${getSiteUrl()}/join-family?code=${encodeURIComponent(code)}`;
+  return `${getSiteUrl()}${joinFamilyPath(inviteCode)}`;
 }
 
 export function loginUrl(next?: string): string {

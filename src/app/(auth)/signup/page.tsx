@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { MapPin, Eye, EyeOff, Check, Sparkles } from "lucide-react";
 import { completeDemoSignUp, signUpClient } from "@/lib/auth/client";
 import { startPlanTrial } from "@/lib/actions/subscription";
+import { joinFamilyPath } from "@/lib/auth/site-url";
 import { storageKeys } from "@/lib/storage-keys";
 import type { PlanId, BillingInterval } from "@/lib/plans";
 import { getPlanPricing } from "@/lib/plans";
@@ -100,9 +101,7 @@ export default function SignupPage() {
         if (planKey === "family" || planKey === "legacy") {
           await startPlanTrial(planKey);
         }
-        const destination = joinCode
-          ? `/join-family?code=${encodeURIComponent(joinCode)}`
-          : "/dashboard/welcome";
+        const destination = joinCode ? joinFamilyPath(joinCode) : "/dashboard/welcome";
         window.location.href = destination;
         return;
       }

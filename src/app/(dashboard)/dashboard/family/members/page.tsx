@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Copy, Check, Crown, Link2 } from "lucide-react";
+import { Users, Copy, Check, Crown, Link2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { joinFamilyUrl } from "@/lib/auth/site-url";
 
@@ -74,6 +74,24 @@ export default function FamilyMembersPage() {
     }
   }
 
+  async function shareInvite() {
+    if (!inviteUrl || !family) return;
+    const shareText = `Join our HomePin family vault. Code: ${family.inviteCode}\n${inviteUrl}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "Join my HomePin family",
+          text: shareText,
+          url: inviteUrl,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+      }
+    }
+    await copyInvite();
+  }
+
   async function saveFamilyName() {
     setSavingName(true);
     try {
@@ -111,8 +129,9 @@ export default function FamilyMembersPage() {
                   Invite your family
                 </CardTitle>
                 <CardDescription>
-                  Send this link to your partner or kids. They create an account (or log in), then
-                  join your family vault.
+                  Send this link by text or WhatsApp. It looks like{" "}
+                  <span className="font-mono text-foreground">homepin.vercel.app/join-family/abc12345</span>
+                  {" "}so it won&apos;t get cut off like old links with question marks.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -128,6 +147,15 @@ export default function FamilyMembersPage() {
                       <Label>Invite link</Label>
                       <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                         <Input readOnly value={inviteUrl} className="font-mono text-xs" />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="shrink-0 sm:min-w-24"
+                          onClick={shareInvite}
+                        >
+                          <Share2 className="mr-2 h-4 w-4" />
+                          Share
+                        </Button>
                         <Button
                           type="button"
                           variant="outline"
