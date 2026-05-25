@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-in-reminder",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/data-freshness",
+      "schedule": "0 10 * * 1"
+    }
+  ]
+}

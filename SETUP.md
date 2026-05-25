@@ -23,6 +23,8 @@ If you already ran step 1 and get "policy already exists" errors, run only `supa
 
 4. **`supabase/migrations/004_subscriptions.sql`** — family-level plans, trials, and Stripe fields (run after 003).
 
+5. **`supabase/migrations/005_production_ready.sql`** — vault access policies, document storage bucket, invite acceptance (run after 004).
+
 ## 3. Configure authentication
 
 In Supabase **Authentication → URL configuration**:
@@ -97,14 +99,26 @@ When ready to charge:
 3. **Partner/kids** open the link, sign up or log in, and **join the family**.
 4. Anyone in the family sees the **same passwords** and **household info** in real time (stored in Supabase, encrypted at rest).
 
-Legacy Vault items (documents, wills, trusted contacts) remain **per account** for now — only Family Hub is shared.
+Legacy Vault items (documents, wills, trusted contacts, checklist) **sync to your personal cloud account** when logged in — encrypted documents upload to Supabase Storage. Family Hub remains shared across the family.
+
+## Cron jobs (Vercel)
+
+`vercel.json` schedules:
+- **Daily 9am UTC** — inactivity check-in reminder emails (`/api/cron/check-in-reminder`)
+- **Mondays 10am UTC** — stale document reminders (`/api/cron/data-freshness`)
+
+Set `CRON_SECRET` in Vercel env. Vercel Cron sends `Authorization: Bearer {CRON_SECRET}` automatically when configured.
+
+Also set `RESEND_API_KEY` for real emails and `SUPABASE_SERVICE_ROLE_KEY` for cron DB access.
 
 ## Security summary
 
 | Feature | Status |
 |---------|--------|
 | HTTPS (Vercel) | Automatic |
-| Auth (Supabase) | Email + password |
+| Auth (Supabase) | Email + password + optional TOTP 2FA |
+| Legacy vault cloud sync | Personal account — documents encrypted before upload |
+| Vault access | Multi-contact confirmation before grant |
 | Row Level Security | Family members only see their family's data |
 | Password encryption at rest | AES-256-GCM with `ENCRYPTION_SECRET` |
 | Demo mode (no Supabase) | Local browser only — not for production |

@@ -39,6 +39,7 @@ Run in Supabase SQL Editor, in order:
 2. `supabase/run_002_family_only.sql` (or `002_family_sharing.sql`)
 3. `supabase/migrations/003_invite_code_lookup.sql`
 4. `supabase/migrations/004_subscriptions.sql`
+5. `supabase/migrations/005_production_ready.sql` — vault access RLS, storage bucket, invite policies
 
 ## Stripe (when ready)
 

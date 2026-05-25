@@ -40,7 +40,7 @@ const suggestedRoles = [
 ];
 
 export default function DirectoryPage() {
-  const { importantContacts, setImportantContacts, isHydrated } = useVault();
+  const { importantContacts, setImportantContacts, isHydrated, cloudMode, upsertImportantContact, removeImportantContact } = useVault();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -59,12 +59,12 @@ export default function DirectoryPage() {
     setNotes("");
   }
 
-  function handleAdd() {
+  async function handleAdd() {
     const trimmedName = name.trim();
     const trimmedRole = role.trim();
     if (!trimmedName) { toast.error("Please enter a name"); return; }
     if (!trimmedRole) { toast.error("Please enter a role (e.g. Solicitor)"); return; }
-    const addedName = trimmedName;
+
     const newContact: ImportantContact = {
       id: crypto.randomUUID(),
       user_id: "",
@@ -75,18 +75,41 @@ export default function DirectoryPage() {
       email: email.trim() || undefined,
       notes: notes.trim() || undefined,
     };
-    setImportantContacts((prev) => [...prev, newContact]);
+
+    if (cloudMode) {
+      const result = await upsertImportantContact(newContact, true);
+      if (result.error) {
+        toast.error("Could not save", { description: result.error });
+        return;
+      }
+      if (result.contact) {
+        setImportantContacts((prev) => [...prev, result.contact!]);
+      }
+    } else {
+      setImportantContacts((prev) => [...prev, newContact]);
+    }
+
     resetForm();
     setDialogOpen(false);
     toast.success("Contact saved", {
-      description: `${addedName} has been added to your key contacts.`,
+      description: `${trimmedName} has been added to your key contacts.`,
       icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
     });
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteId) return;
     const contact = importantContacts.find((c) => c.id === deleteId);
+
+    if (cloudMode) {
+      const result = await removeImportantContact(deleteId);
+      if (result.error) {
+        toast.error("Could not remove", { description: result.error });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     setImportantContacts((prev) => prev.filter((c) => c.id !== deleteId));
     toast.success("Contact removed", {
       description: `${contact?.name} has been deleted.`,

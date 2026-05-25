@@ -121,10 +121,20 @@ export default function FamilyMembersPage() {
                 </div>
                 <div>
                   <Label>Invite link</Label>
-                  <div className="mt-1 flex gap-2">
+                  <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                     <Input readOnly value={inviteUrl} className="font-mono text-xs" />
-                    <Button type="button" variant="outline" onClick={copyInvite}>
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    <Button type="button" variant="outline" className="shrink-0 sm:min-w-24" onClick={copyInvite}>
+                      {copied ? (
+                        <>
+                          <Check className="mr-2 h-4 w-4" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy link
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -138,13 +148,15 @@ export default function FamilyMembersPage() {
             <CardHeader>
               <CardTitle>Family name</CardTitle>
             </CardHeader>
-            <CardContent className="flex gap-3">
+            <CardContent className="flex flex-col gap-3 sm:flex-row">
               <Input
                 value={familyName}
                 onChange={(e) => setFamilyName(e.target.value)}
                 placeholder="e.g. The Smith Family"
               />
-              <Button onClick={saveFamilyName}>Save</Button>
+              <Button onClick={saveFamilyName} className="shrink-0 sm:min-w-24">
+                Save
+              </Button>
             </CardContent>
           </Card>
         )}

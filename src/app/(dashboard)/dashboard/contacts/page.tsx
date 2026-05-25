@@ -45,7 +45,7 @@ const roleLabels: Record<AccessRole, { label: string; description: string }> = {
 };
 
 export default function ContactsPage() {
-  const { trustedContacts, setTrustedContacts, plan, isHydrated } = useVault();
+  const { trustedContacts, setTrustedContacts, plan, isHydrated, cloudMode, removeTrustedContact } = useVault();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -76,37 +76,81 @@ export default function ContactsPage() {
     setRole("on_death_only");
   }
 
-  function handleAdd() {
+  async function handleAdd() {
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
     if (!trimmedName) { toast.error("Please enter a name"); return; }
     if (!trimmedEmail) { toast.error("Please enter an email address"); return; }
 
-    const newContact: TrustedContact = {
-      id: crypto.randomUUID(),
-      user_id: "",
-      name: trimmedName,
-      email: trimmedEmail,
-      phone: phone.trim() || undefined,
-      relationship: relationship.trim(),
-      role,
-      access_granted: false,
-      invited_at: new Date().toISOString(),
-    };
+    if (cloudMode) {
+      const res = await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: trimmedEmail,
+          relationship: relationship.trim(),
+          accessLevel: role,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error("Could not send invite", { description: data.error });
+        return;
+      }
+      const row = data.contact;
+      const newContact: TrustedContact = {
+        id: row.id,
+        user_id: row.user_id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone || undefined,
+        relationship: row.relationship || "",
+        role: row.access_level,
+        access_granted: row.invitation_status === "accepted",
+        invited_at: row.invited_at || row.created_at,
+      };
+      setTrustedContacts((prev) => [...prev, newContact]);
+      toast.success("Invitation sent", {
+        description: `${trimmedName} will receive an email to accept.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
+      });
+    } else {
+      const newContact: TrustedContact = {
+        id: crypto.randomUUID(),
+        user_id: "",
+        name: trimmedName,
+        email: trimmedEmail,
+        phone: phone.trim() || undefined,
+        relationship: relationship.trim(),
+        role,
+        access_granted: false,
+        invited_at: new Date().toISOString(),
+      };
+      setTrustedContacts((prev) => [...prev, newContact]);
+      toast.success("Contact added", {
+        description: `${trimmedName} has been added as a trusted person.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
+      });
+    }
 
-    setTrustedContacts((prev) => [...prev, newContact]);
-    const addedName = name;
     resetForm();
     setDialogOpen(false);
-    toast.success("Contact added", {
-      description: `${addedName} has been added as a trusted person.`,
-      icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
-    });
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteId) return;
     const contact = trustedContacts.find((c) => c.id === deleteId);
+
+    if (cloudMode) {
+      const result = await removeTrustedContact(deleteId);
+      if (result.error) {
+        toast.error("Could not remove contact", { description: result.error });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     setTrustedContacts((prev) => prev.filter((c) => c.id !== deleteId));
     toast.success("Contact removed", {
       description: `${contact?.name} has been removed.`,

@@ -42,9 +42,11 @@ import {
   loadDocumentBlob,
   deleteDocumentBlob,
 } from "@/lib/document-blobs";
+import { uploadEncryptedDocument, downloadDecryptedDocument } from "@/lib/services/documents";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function VaultPage() {
-  const { documents, setDocuments, plan, isHydrated } = useVault();
+  const { documents, setDocuments, plan, isHydrated, cloudMode, upsertDocument, removeDocument } = useVault();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<DocumentCategory | "all">("all");
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -111,11 +113,11 @@ export default function VaultPage() {
     }
   }
 
-  function handleUpload() {
+  async function handleUpload() {
     if (!selectedFile) return;
 
     const id = crypto.randomUUID();
-    const newDoc: StoredDocument = {
+    let newDoc: StoredDocument = {
       id,
       title: uploadTitle || selectedFile.name,
       category: uploadCategory,
@@ -127,22 +129,57 @@ export default function VaultPage() {
       uploadedAt: new Date().toISOString(),
     };
 
-    saveDocumentBlob(id, selectedFile)
-      .then(() => {
-        setDocuments((prev) => [newDoc, ...prev]);
-        resetUploadForm();
-        setUploadOpen(false);
-        toast.success("Document saved", {
-          description: `"${newDoc.title}" is stored securely on this device.`,
-          icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
-        });
-      })
-      .catch((err: Error) => {
-        toast.error(err.message || "Could not save file");
+    try {
+      if (cloudMode && isSupabaseConfigured()) {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Not logged in");
+
+        const uploaded = await uploadEncryptedDocument(selectedFile, user.id);
+        newDoc = {
+          ...newDoc,
+          filePath: uploaded.filePath,
+          encryptionIv: uploaded.encryptionIv,
+          encryptionKey: uploaded.encryptionKey,
+        };
+        const result = await upsertDocument(newDoc, uploaded.encryptionKey);
+        if (result.error) throw new Error(result.error);
+        if (result.document) newDoc = result.document;
+      } else {
+        await saveDocumentBlob(id, selectedFile);
+      }
+
+      setDocuments((prev) => [newDoc, ...prev]);
+      resetUploadForm();
+      setUploadOpen(false);
+      toast.success("Document saved", {
+        description: cloudMode
+          ? `"${newDoc.title}" is encrypted and backed up to your vault.`
+          : `"${newDoc.title}" is stored securely on this device.`,
+        icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
       });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save file");
+    }
   }
 
-  function downloadDocument(doc: StoredDocument) {
+  async function downloadDocument(doc: StoredDocument) {
+    if (cloudMode && doc.filePath && doc.encryptionKey && doc.encryptionIv) {
+      try {
+        const blob = await downloadDecryptedDocument(doc.filePath, doc.encryptionKey, doc.encryptionIv);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = doc.fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      } catch {
+        toast.error("Could not download from cloud — try again.");
+        return;
+      }
+    }
+
     const stored = loadDocumentBlob(doc.id);
     if (!stored) {
       toast.error("File not found — it may have been saved on another device.");
@@ -156,10 +193,21 @@ export default function VaultPage() {
     URL.revokeObjectURL(url);
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteId) return;
     const doc = documents.find((d) => d.id === deleteId);
-    deleteDocumentBlob(deleteId);
+
+    if (cloudMode) {
+      const result = await removeDocument(deleteId, doc?.filePath);
+      if (result.error) {
+        toast.error("Could not delete", { description: result.error });
+        setDeleteId(null);
+        return;
+      }
+    } else {
+      deleteDocumentBlob(deleteId);
+    }
+
     setDocuments((prev) => prev.filter((d) => d.id !== deleteId));
     setSelectedDoc(null);
     setDeleteId(null);

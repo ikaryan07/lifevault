@@ -292,7 +292,7 @@ export default function HouseholdPage() {
               Important details your family needs — addresses, emergency numbers, providers.
             </p>
           </div>
-          <Button onClick={() => openCreate()} className="shrink-0 gap-2">
+          <Button onClick={() => openCreate()} className="w-full shrink-0 gap-2 sm:w-auto">
             <Plus className="h-4 w-4" />
             Add Info
           </Button>
@@ -402,18 +402,18 @@ export default function HouseholdPage() {
                                   )}
                                 </div>
 
-                                <div className="flex shrink-0 gap-1 sm:opacity-60 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                                <div className="flex shrink-0 gap-1 self-end sm:self-auto sm:opacity-60 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                                   <button
                                     onClick={() => openEdit(item)}
                                     aria-label={`Edit ${item.label}`}
-                                    className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                    className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors sm:h-auto sm:w-auto sm:p-2"
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </button>
                                   <button
                                     onClick={() => setDeleteId(item.id)}
                                     aria-label={`Delete ${item.label}`}
-                                    className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                    className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors sm:h-auto sm:w-auto sm:p-2"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -560,7 +560,7 @@ function IdeasPanel({
         aria-expanded={isOpen}
         aria-controls="ideas-panel"
         className={cn(
-          "fixed bottom-24 right-6 z-40 flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium shadow-lg transition-colors lg:bottom-8",
+          "fab-above-tab-bar fixed right-4 z-40 flex min-h-11 items-center gap-2 rounded-full px-4 py-3 text-sm font-medium shadow-lg transition-colors lg:bottom-8 lg:right-6",
           isOpen
             ? "bg-foreground text-background"
             : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -595,7 +595,7 @@ function IdeasPanel({
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             id="ideas-panel"
-            className="fixed bottom-40 right-6 z-40 w-80 max-h-[60vh] overflow-y-auto rounded-2xl border bg-card shadow-2xl lg:bottom-20"
+            className="panel-above-tab-bar fixed inset-x-4 z-40 max-h-[50vh] overflow-y-auto rounded-2xl border bg-card shadow-2xl sm:inset-x-auto sm:right-6 sm:w-80 sm:max-h-[60vh] lg:bottom-20"
           >
             <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur-sm p-4">
               <div className="flex items-center gap-2">

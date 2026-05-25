@@ -121,7 +121,7 @@ export function vaultAccessRequestEmail(ownerName: string, requesterName: string
             If you believe this request is legitimate, you can confirm it below.
           </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="background: #1a5276; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/vault-access" style="background: #1a5276; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Review Request
             </a>
           </div>

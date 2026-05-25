@@ -4,6 +4,7 @@ import { createContext, useContext, useCallback, useMemo, ReactNode, useEffect }
 import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 import { migrateLegacyStorageKeys, storageKeys } from "@/lib/storage-keys";
 import { useVaultCloud } from "@/lib/hooks/use-vault-cloud";
+import { useLegacyCloud } from "@/lib/hooks/use-legacy-cloud";
 import { useUser } from "@/lib/auth/hooks";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { syncSupabaseProfileToStorage } from "@/lib/auth/sync-profile";
@@ -30,6 +31,9 @@ export interface StoredDocument {
   hasFile?: boolean;
   notes?: string;
   uploadedAt: string;
+  filePath?: string;
+  encryptionIv?: string;
+  encryptionKey?: string;
 }
 
 export interface StoredDigitalAsset {
@@ -158,6 +162,30 @@ interface VaultStore {
     isNew: boolean
   ) => Promise<{ item?: HouseholdItem; error?: string }>;
   removeHousehold: (id: string) => Promise<{ error?: string; success?: boolean }>;
+  removeTrustedContact: (id: string) => Promise<{ error?: string; success?: boolean }>;
+  upsertImportantContact: (
+    contact: ImportantContact,
+    isNew: boolean
+  ) => Promise<{ contact?: ImportantContact; error?: string }>;
+  removeImportantContact: (id: string) => Promise<{ error?: string; success?: boolean }>;
+  upsertDigitalAsset: (
+    asset: StoredDigitalAsset,
+    isNew: boolean
+  ) => Promise<{ asset?: StoredDigitalAsset; error?: string }>;
+  removeDigitalAsset: (id: string) => Promise<{ error?: string; success?: boolean }>;
+  toggleChecklistItem: (
+    listType: "before" | "after",
+    itemId: string,
+    completed: boolean
+  ) => Promise<{ error?: string }>;
+  upsertDocument: (
+    doc: StoredDocument,
+    encryptionKey?: string
+  ) => Promise<{ document?: StoredDocument; error?: string }>;
+  removeDocument: (
+    id: string,
+    filePath?: string
+  ) => Promise<{ error?: string; success?: boolean }>;
 }
 
 const VaultContext = createContext<VaultStore | null>(null);
@@ -230,7 +258,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     removeHousehold,
   } = useVaultCloud(setSharedCredentials, setHouseholdInfo, localHydrated);
 
-  const isHydrated = localHydrated && (cloudMode ? cloudSynced : true);
+  const legacyCloud = useLegacyCloud(
+    {
+      setTrustedContacts,
+      setImportantContacts,
+      setDigitalAssets,
+      setDocuments,
+      setChecklist,
+    },
+    { trustedContacts, importantContacts, digitalAssets, documents, checklist },
+    localHydrated,
+    cloudMode ? cloudSynced : true
+  );
+
+  const isHydrated = localHydrated && (cloudMode ? cloudSynced && legacyCloud.legacySynced : true);
 
   const value = useMemo(
     () => ({
@@ -266,6 +307,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       removeCredential,
       upsertHousehold,
       removeHousehold,
+      removeTrustedContact: legacyCloud.removeTrusted,
+      upsertImportantContact: legacyCloud.upsertImportant,
+      removeImportantContact: legacyCloud.removeImportant,
+      upsertDigitalAsset: legacyCloud.upsertDigital,
+      removeDigitalAsset: legacyCloud.removeDigital,
+      toggleChecklistItem: legacyCloud.toggleChecklist,
+      upsertDocument: legacyCloud.upsertDocument,
+      removeDocument: legacyCloud.removeDocument,
     }),
     [
       profile, setProfile, plan, setPlan, subscription,
@@ -275,6 +324,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       householdInfo, setHouseholdInfo, isHydrated,
       cloudMode, cloudLoading, family, refreshCloud,
       upsertCredential, removeCredential, upsertHousehold, removeHousehold,
+      legacyCloud,
     ]
   );
 

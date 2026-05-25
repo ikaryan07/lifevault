@@ -259,7 +259,7 @@ export default function PasswordsPage() {
               Shared family passwords — WiFi, streaming, and everything in between.
             </p>
           </div>
-          <Button onClick={openCreate} className="shrink-0 gap-2">
+          <Button onClick={openCreate} className="hidden shrink-0 gap-2 sm:inline-flex">
             <Plus className="h-4 w-4" />
             Add Login
           </Button>
@@ -279,7 +279,7 @@ export default function PasswordsPage() {
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value as CredentialCategory | "all")}
-            className="rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-0"
             aria-label="Filter by category"
           >
             <option value="all">All Categories</option>
@@ -346,7 +346,8 @@ export default function PasswordsPage() {
                               exit={{ opacity: 0, scale: 0.95 }}
                             >
                               <Card className="group transition-all hover:shadow-md">
-                                <CardContent className="flex items-center gap-4 p-4">
+                                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                                  <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center sm:gap-4">
                                   <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", colorClass)}>
                                     <Icon className="h-5 w-5" />
                                   </div>
@@ -420,19 +421,20 @@ export default function PasswordsPage() {
                                       </p>
                                     )}
                                   </div>
+                                  </div>
 
-                                  <div className="flex shrink-0 gap-1 sm:opacity-60 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                                  <div className="flex shrink-0 gap-1 self-end sm:self-auto sm:opacity-60 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                                     <button
                                       onClick={() => openEdit(cred)}
                                       aria-label={`Edit ${cred.name}`}
-                                      className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                      className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors sm:h-auto sm:w-auto sm:p-2"
                                     >
                                       <Pencil className="h-4 w-4" />
                                     </button>
                                     <button
                                       onClick={() => setDeleteId(cred.id)}
                                       aria-label={`Delete ${cred.name}`}
-                                      className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                      className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors sm:h-auto sm:w-auto sm:p-2"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </button>
@@ -480,7 +482,7 @@ export default function PasswordsPage() {
                   id="cred-category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as CredentialCategory)}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                  className="min-h-11 w-full rounded-lg border bg-background px-3 py-2 text-sm sm:min-h-0"
                 >
                   {Object.entries(CREDENTIAL_CATEGORIES).map(([key, { label }]) => (
                     <option key={key} value={key}>
@@ -567,6 +569,15 @@ export default function PasswordsPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <button
+          type="button"
+          onClick={openCreate}
+          className="fab-above-tab-bar fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:bg-primary/90 active:scale-95 sm:hidden"
+          aria-label="Add login"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
 
         <ConfirmDialog
           open={!!deleteId}

@@ -21,12 +21,19 @@ export async function GET(request: Request) {
     }
   );
 
-  const { data: overdueUsers } = await supabase
+  const { data: profiles } = await supabase
     .from("profiles")
     .select("*")
-    .lt("last_check_in", new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString());
+    .not("last_check_in", "is", null);
 
-  if (!overdueUsers || overdueUsers.length === 0) {
+  const overdueUsers = (profiles ?? []).filter((user) => {
+    const daysSince = Math.floor(
+      (Date.now() - new Date(user.last_check_in).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return daysSince >= (user.check_in_interval_days || 30);
+  });
+
+  if (overdueUsers.length === 0) {
     return NextResponse.json({ message: "No overdue users" });
   }
 
@@ -36,14 +43,12 @@ export async function GET(request: Request) {
       (Date.now() - new Date(user.last_check_in).getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (daysSince >= user.check_in_interval_days) {
-      try {
-        const emailContent = checkInReminderEmail(user.first_name, daysSince);
-        await sendEmail({ to: user.email, ...emailContent });
-        sent++;
-      } catch (err) {
-        console.error(`Failed to send check-in to ${user.email}:`, err);
-      }
+    try {
+      const emailContent = checkInReminderEmail(user.first_name, daysSince);
+      await sendEmail({ to: user.email, ...emailContent });
+      sent++;
+    } catch (err) {
+      console.error(`Failed to send check-in to ${user.email}:`, err);
     }
   }
 

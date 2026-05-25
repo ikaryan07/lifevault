@@ -43,7 +43,7 @@ const actionLabels: Record<AssetAction, string> = {
 };
 
 export default function DigitalAssetsPage() {
-  const { digitalAssets, setDigitalAssets, isHydrated } = useVault();
+  const { digitalAssets, setDigitalAssets, isHydrated, cloudMode, upsertDigitalAsset, removeDigitalAsset } = useVault();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -62,25 +62,54 @@ export default function DigitalAssetsPage() {
     setNotes("");
   }
 
-  function handleAdd() {
+  async function handleAdd() {
     const trimmedName = name.trim();
     if (!trimmedName) { toast.error("Please enter an account name"); return; }
-    const addedName = trimmedName;
-    setDigitalAssets((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), name: trimmedName, type, url: url.trim(), username: username.trim(), action, notes: notes.trim() },
-    ]);
+
+    const asset = {
+      id: crypto.randomUUID(),
+      name: trimmedName,
+      type,
+      url: url.trim(),
+      username: username.trim(),
+      action,
+      notes: notes.trim(),
+    };
+
+    if (cloudMode) {
+      const result = await upsertDigitalAsset(asset, true);
+      if (result.error) {
+        toast.error("Could not save", { description: result.error });
+        return;
+      }
+      if (result.asset) {
+        setDigitalAssets((prev) => [...prev, result.asset!]);
+      }
+    } else {
+      setDigitalAssets((prev) => [...prev, asset]);
+    }
+
     resetForm();
     setDialogOpen(false);
     toast.success("Account added", {
-      description: `${addedName} has been saved to your online accounts.`,
+      description: `${trimmedName} has been saved to your online accounts.`,
       icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
     });
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteId) return;
     const asset = digitalAssets.find((a) => a.id === deleteId);
+
+    if (cloudMode) {
+      const result = await removeDigitalAsset(deleteId);
+      if (result.error) {
+        toast.error("Could not remove", { description: result.error });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     setDigitalAssets((prev) => prev.filter((a) => a.id !== deleteId));
     toast.success("Account removed", {
       description: `${asset?.name} has been deleted.`,

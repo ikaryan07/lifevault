@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { MfaSettings } from "@/components/settings/mfa-settings";
 import {
   Dialog,
   DialogContent,
@@ -323,12 +324,12 @@ export default function SettingsPage() {
               </Button>
             </div>
             <Separator />
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm font-medium">Two-Factor Authentication (2FA)</p>
                 <p className="text-xs text-muted-foreground">Add extra security with an authenticator app.</p>
               </div>
-              <Badge variant="secondary">Coming Soon</Badge>
+              <MfaSettings />
             </div>
             <Separator />
             <div className="flex items-center justify-between gap-4">

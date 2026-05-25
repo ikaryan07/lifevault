@@ -27,6 +27,7 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/motion/page-transition";
+import { FamilySetupProgress } from "@/components/dashboard/family-setup-progress";
 
 const BEFORE_TOTAL = 16;
 const AFTER_TOTAL = 19;
@@ -74,9 +75,9 @@ export default function DashboardPage() {
 
   return (
     <PageTransition>
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Greeting */}
-        <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 sm:p-8">
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 sm:p-8">
           <div className="flex items-start gap-4">
             <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-full bg-primary/20">
               {hasAnyProgress ? (
@@ -99,6 +100,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        <FamilySetupProgress />
 
         {/* Family Hub Section */}
         <div>

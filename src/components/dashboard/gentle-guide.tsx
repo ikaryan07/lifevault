@@ -133,13 +133,15 @@ export function GentleGuide({ page }: { page?: string } = {}) {
 
   if (!suggestion || dismissed) return null;
 
+  const showOnMobile = resolvedPage === "dashboard";
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
-        className="mb-6"
+        className={cn("mb-4 sm:mb-6", !showOnMobile && "hidden sm:block")}
       >
         <div className={cn(
           "flex items-start gap-3 rounded-xl border p-4",
@@ -164,7 +166,7 @@ export function GentleGuide({ page }: { page?: string } = {}) {
           </div>
           <button
             onClick={() => setDismissed(true)}
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Dismiss suggestion"
           >
             <X className="h-3.5 w-3.5" />

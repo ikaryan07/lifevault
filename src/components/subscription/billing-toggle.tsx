@@ -25,7 +25,7 @@ export function BillingToggle({
         type="button"
         onClick={() => onChange("monthly")}
         className={cn(
-          "rounded-full px-4 py-1.5 font-medium transition-colors",
+          "min-h-11 rounded-full px-5 py-2.5 font-medium transition-colors sm:min-h-0 sm:px-4 sm:py-1.5",
           value === "monthly"
             ? "bg-background text-foreground shadow-sm"
             : "text-muted-foreground hover:text-foreground"
@@ -38,7 +38,7 @@ export function BillingToggle({
         type="button"
         onClick={() => onChange("annual")}
         className={cn(
-          "rounded-full px-4 py-1.5 font-medium transition-colors",
+          "min-h-11 rounded-full px-5 py-2.5 font-medium transition-colors sm:min-h-0 sm:px-4 sm:py-1.5",
           value === "annual"
             ? "bg-background text-foreground shadow-sm"
             : "text-muted-foreground hover:text-foreground"

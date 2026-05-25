@@ -228,12 +228,15 @@ function SectionGroup({ section, completedMap, onToggle }: {
 }
 
 export default function ChecklistPage() {
-  const { checklist, setChecklist, isHydrated } = useVault();
+  const { checklist, setChecklist, isHydrated, cloudMode, toggleChecklistItem } = useVault();
 
   function toggleBefore(id: string) {
     setChecklist((prev) => {
       const wasCompleted = prev.before[id];
       const nextBefore = { ...prev.before, [id]: !wasCompleted };
+      if (cloudMode) {
+        toggleChecklistItem("before", id, !wasCompleted);
+      }
       if (!wasCompleted) {
         const n = Object.values(nextBefore).filter(Boolean).length;
         if (n === allBeforeItems.length) {
@@ -257,6 +260,9 @@ export default function ChecklistPage() {
       ...prev,
       after: { ...prev.after, [id]: !wasCompleted },
     }));
+    if (cloudMode) {
+      toggleChecklistItem("after", id, !wasCompleted);
+    }
     if (!wasCompleted) {
       toast.success("Step complete", { description: "One less thing to worry about." });
     }
