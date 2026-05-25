@@ -1,11 +1,68 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/auth/demo";
 import { encryptSecret, decryptSecret, hasEncryptionSecret } from "@/lib/crypto/server-secrets";
 import { assertCanAddFamilyMember, assertWithinLimit } from "@/lib/subscriptions/server";
 import type { SharedCredential, HouseholdItem, CredentialCategory, HouseholdCategory } from "@/lib/store";
 import { revalidatePath } from "next/cache";
+
+function generateInviteCode(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 8).toLowerCase();
+}
+
+function normalizeInviteCode(code: string): string {
+  return code.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+async function lookupFamilyByInviteCode(
+  normalized: string
+): Promise<{ id: string; name: string } | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("find_family_by_invite_code", {
+    invite: normalized,
+  });
+
+  if (!error && data) {
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row?.id) return { id: row.id as string, name: row.name as string };
+  }
+
+  if (hasAdminClient()) {
+    const admin = createAdminClient();
+    const { data: rows } = await admin.from("families").select("id, name, invite_code");
+    const match = rows?.find(
+      (f) => normalizeInviteCode(String(f.invite_code ?? "")) === normalized
+    );
+    if (match) return { id: match.id, name: match.name };
+  }
+
+  return null;
+}
+
+async function ensureInviteCodeOnFamily(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  familyId: string,
+  currentCode: string | null | undefined
+): Promise<string> {
+  if (currentCode && normalizeInviteCode(currentCode)) {
+    return currentCode.trim().toLowerCase();
+  }
+
+  const newCode = generateInviteCode();
+  const { error } = await supabase
+    .from("families")
+    .update({ invite_code: newCode })
+    .eq("id", familyId);
+
+  if (error && hasAdminClient()) {
+    await createAdminClient().from("families").update({ invite_code: newCode }).eq("id", familyId);
+  }
+
+  return newCode;
+}
 
 export type FamilyMemberInfo = {
   id: string;
@@ -64,7 +121,7 @@ async function ensureFamily(supabase: Awaited<ReturnType<typeof createClient>>, 
 
   const { data: family, error: famErr } = await supabase
     .from("families")
-    .insert({ name: familyName, owner_id: userId })
+    .insert({ name: familyName, owner_id: userId, invite_code: generateInviteCode() })
     .select("id")
     .single();
 
@@ -100,6 +157,8 @@ export async function getFamilyInfo(): Promise<{ family: FamilyInfo | null; clou
     .single();
 
   if (famErr || !family) return { family: null, cloudEnabled: true };
+
+  const inviteCode = await ensureInviteCodeOnFamily(supabase, family.id, family.invite_code);
 
   const { data: members, error: memErr } = await supabase
     .from("family_members")
@@ -140,7 +199,7 @@ export async function getFamilyInfo(): Promise<{ family: FamilyInfo | null; clou
     family: {
       id: family.id,
       name: family.name,
-      inviteCode: family.invite_code,
+      inviteCode,
       role: myMembership?.role ?? "member",
       members: memberList,
     },
@@ -167,7 +226,7 @@ export async function updateFamilyName(name: string) {
 export async function joinFamilyByInviteCode(code: string) {
   if (!isSupabaseConfigured()) return { error: "Cloud not configured" };
   const { supabase, user } = await requireUser();
-  const normalized = code.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalized = normalizeInviteCode(code);
 
   if (!normalized) return { error: "Enter a valid invite code" };
 
@@ -180,14 +239,9 @@ export async function joinFamilyByInviteCode(code: string) {
     return { error: e instanceof Error ? e.message : "Cannot join family" };
   }
 
-  const { data: families, error: famErr } = await supabase.rpc(
-    "find_family_by_invite_code",
-    { invite: normalized }
-  );
+  const family = await lookupFamilyByInviteCode(normalized);
 
-  const family = Array.isArray(families) ? families[0] : families;
-
-  if (famErr || !family) return { error: "Invalid invite code — check it and try again" };
+  if (!family) return { error: "Invalid invite code — check it and try again" };
 
   const existingFamilyId = await getActiveFamilyId(supabase, user.id);
   if (existingFamilyId === family.id) {

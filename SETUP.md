@@ -25,6 +25,8 @@ If you already ran step 1 and get "policy already exists" errors, run only `supa
 
 5. **`supabase/migrations/005_production_ready.sql`** — vault access policies, document storage bucket, invite acceptance (run after 004).
 
+6. **`supabase/migrations/006_fix_family_join.sql`** — fixes "Family not found" when joining with an invite code (run after 005).
+
 ## 3. Configure authentication
 
 In Supabase **Authentication → URL configuration**:

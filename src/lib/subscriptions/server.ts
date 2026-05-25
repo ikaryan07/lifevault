@@ -223,27 +223,81 @@ function formatLimitLabel(key: PlanLimitKey, limit: number): string {
 export async function assertCanAddFamilyMember(familyId: string): Promise<{ error?: string }> {
   if (!isSupabaseConfigured()) return {};
 
+  type JoinMeta = {
+    id: string;
+    plan_id: PlanId;
+    trial_ends_at: string | null;
+    subscription_status: string;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
+    member_count: number;
+  };
+
+  let meta: JoinMeta | null = null;
   const supabase = await createClient();
-  const { data: family, error: famErr } = await supabase
-    .from("families")
-    .select(
-      "id, owner_id, plan_id, trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_status"
-    )
-    .eq("id", familyId)
-    .single();
 
-  if (famErr || !family) return { error: "Family not found" };
+  const { data, error } = await supabase.rpc("get_family_join_meta", {
+    target_family_id: familyId,
+  });
 
-  const planId = resolveEffectivePlanId(family as FamilySubscriptionRow);
+  if (!error && data) {
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row?.id) {
+      meta = {
+        id: row.id as string,
+        plan_id: (row.plan_id ?? "free") as PlanId,
+        trial_ends_at: row.trial_ends_at as string | null,
+        subscription_status: (row.subscription_status ?? "none") as string,
+        stripe_customer_id: row.stripe_customer_id as string | null,
+        stripe_subscription_id: row.stripe_subscription_id as string | null,
+        member_count: Number(row.member_count ?? 0),
+      };
+    }
+  }
+
+  if (!meta && hasAdminClient()) {
+    const admin = createAdminClient();
+    const { data: family } = await admin
+      .from("families")
+      .select(
+        "id, plan_id, trial_ends_at, stripe_customer_id, stripe_subscription_id, subscription_status"
+      )
+      .eq("id", familyId)
+      .single();
+
+    if (family) {
+      const { count } = await admin
+        .from("family_members")
+        .select("id", { count: "exact", head: true })
+        .eq("family_id", familyId)
+        .eq("status", "active");
+
+      meta = {
+        id: family.id,
+        plan_id: (family.plan_id ?? "free") as PlanId,
+        trial_ends_at: family.trial_ends_at,
+        subscription_status: family.subscription_status ?? "none",
+        stripe_customer_id: family.stripe_customer_id,
+        stripe_subscription_id: family.stripe_subscription_id,
+        member_count: count ?? 0,
+      };
+    }
+  }
+
+  if (!meta) return { error: "Family not found" };
+
+  const planId = resolveEffectivePlanId({
+    id: meta.id,
+    owner_id: "",
+    plan_id: meta.plan_id,
+    trial_ends_at: meta.trial_ends_at,
+    stripe_customer_id: meta.stripe_customer_id,
+    stripe_subscription_id: meta.stripe_subscription_id,
+    subscription_status: meta.subscription_status,
+  });
   const limits = getPlan(planId).limits;
 
-  const { count } = await supabase
-    .from("family_members")
-    .select("id", { count: "exact", head: true })
-    .eq("family_id", familyId)
-    .eq("status", "active");
-
-  const current = count ?? 0;
+  const current = meta.member_count;
   if (isAtLimit(current, limits.familyMembers)) {
     return {
       error: `This family has reached its member limit (${limits.familyMembers}). The family owner needs to upgrade to Family or Legacy to invite more people.`,
