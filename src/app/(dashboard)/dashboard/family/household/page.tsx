@@ -31,7 +31,6 @@ import {
   Trash2,
   Copy,
   Check,
-  Search,
   ClipboardList,
   Lightbulb,
   X,
@@ -42,6 +41,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/motion/page-transition";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<HouseholdCategory, ComponentType<{ className?: string }>> = {
@@ -300,15 +300,12 @@ export default function HouseholdPage() {
 
         {/* Search */}
         {householdInfo.length > 0 && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search household info..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search household info..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search household info"
+          />
         )}
 
         {/* Content */}

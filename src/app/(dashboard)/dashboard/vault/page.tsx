@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   Upload,
-  Search,
   FileText,
   FolderLock,
   Plus,
@@ -37,6 +36,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DOCUMENT_CATEGORIES, type DocumentCategory } from "@/types";
 import { PageTransition } from "@/components/motion/page-transition";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   saveDocumentBlob,
   loadDocumentBlob,
@@ -394,15 +394,12 @@ export default function VaultPage() {
         {/* Search and Filter */}
         {documents.length > 0 && (
           <>
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search your documents..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-11"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search your documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search documents"
+            />
 
             <div className="flex flex-wrap gap-2">
               <button

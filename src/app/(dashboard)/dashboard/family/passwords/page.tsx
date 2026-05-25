@@ -30,13 +30,13 @@ import {
   Pencil,
   Trash2,
   Check,
-  Search,
   KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/motion/page-transition";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 
 const categoryIcons: Record<CredentialCategory, React.ComponentType<{ className?: string }>> = {
@@ -267,15 +267,13 @@ export default function PasswordsPage() {
 
         {/* Search & Filter */}
         <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search passwords..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search passwords..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            wrapperClassName="flex-1 min-w-0"
+            aria-label="Search passwords"
+          />
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value as CredentialCategory | "all")}
