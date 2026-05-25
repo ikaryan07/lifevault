@@ -18,8 +18,8 @@ const faqs = [
     a: "The family owner gets full access to the chosen plan for 14 days. No credit card is required until Stripe payments are connected. When the trial ends, the family moves to the Free plan — your data stays safe, but you can't add more beyond free limits until you upgrade again.",
   },
   {
-    q: "Can I cancel anytime?",
-    a: "Absolutely. There are no lock-in contracts. Cancel from your Settings page at any time. Your data remains accessible on the Free plan even after cancellation.",
+    q: "Can I pay annually?",
+    a: "Yes. Family is $69/year and Legacy is $129/year — that's 2 months free compared to paying monthly. The family owner pays once per year; everyone they invite still joins free.",
   },
   {
     q: "Who can access my vault?",

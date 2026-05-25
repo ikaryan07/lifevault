@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useVault, PLANS, type PlanId } from "@/lib/store";
-import { PLAN_ORDER } from "@/lib/plans";
+import {
+  PLAN_ORDER,
+  getPlanPricing,
+  type BillingInterval,
+} from "@/lib/plans";
 import {
   startPlanTrial,
   downgradeToFree,
@@ -24,6 +28,7 @@ import {
   BillingExplainer,
   TrialBadge,
 } from "@/components/subscription/plan-gate";
+import { BillingToggle } from "@/components/subscription/billing-toggle";
 import {
   Check,
   ArrowLeft,
@@ -46,18 +51,21 @@ const planIcons: Record<PlanId, React.ReactNode> = {
 
 function PlanCard({
   planId,
+  interval,
   isCurrent,
   isPopular,
   disabled,
   onSelect,
 }: {
   planId: PlanId;
+  interval: BillingInterval;
   isCurrent: boolean;
   isPopular: boolean;
   disabled: boolean;
   onSelect: () => void;
 }) {
   const planInfo = PLANS[planId];
+  const display = getPlanPricing(planId, interval);
   const hasBadge = isPopular || isCurrent;
 
   return (
@@ -90,10 +98,19 @@ function PlanCard({
 
           <div className="mt-3 flex items-baseline gap-1">
             <span className="text-3xl font-bold tracking-tight text-foreground">
-              {planInfo.price}
+              {display.price}
             </span>
-            <span className="text-sm text-muted-foreground">{planInfo.period}</span>
+            <span className="text-sm text-muted-foreground">{display.period}</span>
           </div>
+
+          {display.savings && interval === "annual" && planId !== "free" && (
+            <p className="mt-1 text-xs font-medium text-green-600 dark:text-green-400">
+              {display.savings}
+            </p>
+          )}
+          {display.sublabel && interval === "annual" && planId !== "free" && (
+            <p className="mt-1 text-xs text-muted-foreground">{display.sublabel}</p>
+          )}
 
           <p className="mt-2 text-sm text-muted-foreground">{planInfo.tagline}</p>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
@@ -139,9 +156,14 @@ export default function PlanSettingsPage() {
     setPlan,
   } = useVault();
   const searchParams = useSearchParams();
+  const [interval, setInterval] = useState<BillingInterval>("monthly");
   const [confirmTarget, setConfirmTarget] = useState<PlanId | null>(null);
   const [busy, setBusy] = useState(false);
   const targetPlan = confirmTarget ? PLANS[confirmTarget] : null;
+  const targetPricing =
+    confirmTarget && confirmTarget !== "free"
+      ? getPlanPricing(confirmTarget, interval)
+      : null;
 
   useEffect(() => {
     const checkout = searchParams.get("checkout");
@@ -157,13 +179,13 @@ export default function PlanSettingsPage() {
     confirmTarget !== null &&
     PLAN_ORDER.indexOf(confirmTarget) < PLAN_ORDER.indexOf(plan.id);
 
-  async function startCheckout(planId: PlanId) {
+  async function startCheckout(planId: PlanId, billingInterval: BillingInterval) {
     setBusy(true);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, interval: billingInterval }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
@@ -210,7 +232,7 @@ export default function PlanSettingsPage() {
 
       if (cloudMode && isOwner) {
         if (stripeConfigured) {
-          await startCheckout(confirmTarget);
+          await startCheckout(confirmTarget, interval);
           return;
         }
         const result = await startPlanTrial(confirmTarget);
@@ -260,6 +282,10 @@ export default function PlanSettingsPage() {
 
         <BillingExplainer isOwner={isOwner} />
 
+        <div className="flex justify-center sm:justify-start">
+          <BillingToggle value={interval} onChange={setInterval} />
+        </div>
+
         {isOwner && stripeConfigured && plan.id !== "free" && (
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" onClick={openPortal} disabled={busy}>
@@ -285,6 +311,7 @@ export default function PlanSettingsPage() {
             <PlanCard
               key={id}
               planId={id}
+              interval={interval}
               isCurrent={plan.id === id}
               isPopular={id === "family"}
               disabled={cloudMode && !isOwner}
@@ -294,7 +321,7 @@ export default function PlanSettingsPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          All prices in AUD. AES-256 encryption and Australian data hosting on every plan.
+          All prices in AUD. Annual plans save 2 months vs paying monthly.
           {stripeConfigured
             ? " Paid plans bill the family owner only — members join free."
             : " Start a 14-day trial free while payments are being set up."}
@@ -321,13 +348,30 @@ export default function PlanSettingsPage() {
                   <>
                     <strong>{targetPlan?.name}</strong> covers your entire household — one
                     subscription, up to {targetPlan?.limits.familyMembers} members.{" "}
-                    {stripeConfigured
-                      ? `You'll complete checkout at ${targetPlan?.price}${targetPlan?.period} with a 14-day free trial.`
-                      : "You'll get a 14-day free trial. No card required until Stripe is connected."}
+                    {stripeConfigured && targetPricing ? (
+                      <>
+                        You&apos;ll checkout at{" "}
+                        <strong>
+                          {targetPricing.price}
+                          {targetPricing.period}
+                        </strong>{" "}
+                        ({interval === "annual" ? "billed yearly" : "billed monthly"}) with a
+                        14-day free trial.
+                      </>
+                    ) : (
+                      "You'll get a 14-day free trial. No card required until Stripe is connected."
+                    )}
                   </>
                 )}
               </DialogDescription>
             </DialogHeader>
+
+            {confirmTarget && confirmTarget !== "free" && !isDowngrade && (
+              <div className="flex justify-center py-1">
+                <BillingToggle value={interval} onChange={setInterval} />
+              </div>
+            )}
+
             <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setConfirmTarget(null)} disabled={busy}>
                 Cancel
@@ -347,7 +391,7 @@ export default function PlanSettingsPage() {
                   : confirmTarget === "free"
                     ? "Downgrade to Free"
                     : stripeConfigured
-                      ? "Continue to checkout"
+                      ? `Continue to checkout (${interval})`
                       : `Start ${targetPlan?.name} trial`}
               </Button>
             </DialogFooter>

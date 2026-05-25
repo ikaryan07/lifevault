@@ -70,12 +70,15 @@ Until Stripe is configured, family owners can start **14-day free trials** from 
 
 When ready to charge:
 
-1. Create **Family** ($6.99/mo) and **Legacy** ($12.99/mo) recurring prices in [Stripe Dashboard](https://dashboard.stripe.com).
+1. Create **Family** ($6.99/mo or $69/yr) and **Legacy** ($12.99/mo or $129/yr) recurring prices in [Stripe Dashboard](https://dashboard.stripe.com).
 2. Add to Vercel / `.env.local`:
    - `STRIPE_SECRET_KEY`
    - `STRIPE_WEBHOOK_SECRET`
-   - `STRIPE_PRICE_FAMILY` — price ID for Family plan
-   - `STRIPE_PRICE_LEGACY` — price ID for Legacy plan
+   - `STRIPE_PRICE_FAMILY_MONTHLY` — monthly Family price ID
+   - `STRIPE_PRICE_FAMILY_ANNUAL` — yearly Family price ID
+   - `STRIPE_PRICE_LEGACY_MONTHLY` — monthly Legacy price ID
+   - `STRIPE_PRICE_LEGACY_ANNUAL` — yearly Legacy price ID
+   - (`STRIPE_PRICE_FAMILY` / `STRIPE_PRICE_LEGACY` still work as monthly fallbacks)
    - `SUPABASE_SERVICE_ROLE_KEY` — required for webhook to update family plans
 3. Add webhook endpoint: `https://your-domain/api/stripe/webhook`
 4. Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`

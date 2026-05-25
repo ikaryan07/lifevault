@@ -9,7 +9,8 @@ import { MapPin, Eye, EyeOff, Check, Sparkles } from "lucide-react";
 import { completeDemoSignUp, signUpClient } from "@/lib/auth/client";
 import { startPlanTrial } from "@/lib/actions/subscription";
 import { storageKeys } from "@/lib/storage-keys";
-import type { PlanId } from "@/lib/plans";
+import type { PlanId, BillingInterval } from "@/lib/plans";
+import { getPlanPricing } from "@/lib/plans";
 
 const planLabels: Record<string, { name: string; tagline: string }> = {
   family: { name: "Family", tagline: "14-day free trial — no card required" },
@@ -34,6 +35,8 @@ export default function SignupPage() {
   const [selectedPlan, setSelectedPlan] = useState<{ name: string; tagline: string } | null>(
     null
   );
+  const [selectedPlanKey, setSelectedPlanKey] = useState<PlanId | null>(null);
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>("monthly");
   const [joinCode, setJoinCode] = useState("");
 
   useEffect(() => {
@@ -42,6 +45,12 @@ export default function SignupPage() {
     const planKey = params.get("plan") || "";
     if (planLabels[planKey]) {
       setSelectedPlan(planLabels[planKey]);
+      if (planKey === "family" || planKey === "legacy") {
+        setSelectedPlanKey(planKey);
+      }
+    }
+    if (params.get("billing") === "annual") {
+      setBillingInterval("annual");
     }
     const join = params.get("join") || params.get("code");
     if (join) setJoinCode(join);
@@ -146,7 +155,11 @@ export default function SignupPage() {
           </div>
           <div className="flex-1 text-sm">
             <p className="font-semibold text-foreground">{selectedPlan.name} plan selected</p>
-            <p className="text-xs text-muted-foreground">{selectedPlan.tagline}</p>
+            <p className="text-xs text-muted-foreground">
+              {selectedPlanKey
+                ? `${getPlanPricing(selectedPlanKey, billingInterval).price}${getPlanPricing(selectedPlanKey, billingInterval).period} · ${selectedPlan.tagline}`
+                : selectedPlan.tagline}
+            </p>
           </div>
         </div>
       )}

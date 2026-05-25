@@ -1,10 +1,23 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLAN_ORDER, PLANS } from "@/lib/plans";
+import {
+  PLAN_ORDER,
+  PLANS,
+  getPlanPricing,
+  signupUrl,
+  type BillingInterval,
+  type PlanId,
+} from "@/lib/plans";
+import { BillingToggle } from "@/components/subscription/billing-toggle";
 
 export function Pricing() {
+  const [interval, setInterval] = useState<BillingInterval>("monthly");
+
   return (
     <section id="pricing" className="border-t bg-card py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -16,12 +29,17 @@ export function Pricing() {
             One family owner pays. Everyone they invite joins free and shares the same
             passwords and household info.
           </p>
+          <div className="mt-8 flex justify-center">
+            <BillingToggle value={interval} onChange={setInterval} />
+          </div>
         </div>
 
-        <div className="mt-16 grid gap-8 lg:grid-cols-3">
+        <div className="mt-12 grid gap-8 lg:grid-cols-3">
           {PLAN_ORDER.map((planId) => {
             const plan = PLANS[planId];
+            const display = getPlanPricing(planId, interval);
             const highlighted = planId === "family";
+
             return (
               <div
                 key={planId}
@@ -43,10 +61,18 @@ export function Pricing() {
                   <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-4xl font-bold tracking-tight text-foreground">
-                      {plan.price}
+                      {display.price}
                     </span>
-                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                    <span className="text-sm text-muted-foreground">{display.period}</span>
                   </div>
+                  {display.savings && interval === "annual" && planId !== "free" && (
+                    <p className="mt-1 text-xs font-medium text-green-600 dark:text-green-400">
+                      {display.savings}
+                    </p>
+                  )}
+                  {display.sublabel && interval === "annual" && planId !== "free" && (
+                    <p className="mt-1 text-xs text-muted-foreground">{display.sublabel}</p>
+                  )}
                   <p className="mt-2 text-sm text-muted-foreground">{plan.tagline}</p>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     {plan.billingNote}
@@ -54,7 +80,7 @@ export function Pricing() {
                 </div>
 
                 <Link
-                  href={planId === "free" ? "/signup" : `/signup?plan=${planId}`}
+                  href={signupUrl(planId as PlanId, interval)}
                   className={cn(
                     buttonVariants({
                       variant: highlighted ? "default" : "outline",
@@ -82,7 +108,7 @@ export function Pricing() {
         <p className="mt-12 text-center text-sm text-muted-foreground">
           All prices in AUD. AES-256 encryption and Australian data hosting on every plan.
           <br className="hidden sm:block" />
-          No lock-in — cancel anytime from your account settings.
+          Annual plans save 2 months. Cancel anytime from your account settings.
         </p>
       </div>
     </section>

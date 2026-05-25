@@ -8,7 +8,7 @@ import {
   requireFamilyOwner,
   startFamilyTrial,
 } from "@/lib/subscriptions/server";
-import { getPlan, type PlanId } from "@/lib/plans";
+import { getPlan, type PlanId, type BillingInterval } from "@/lib/plans";
 import { isStripeConfigured, getStripe, stripePriceIdForPlan } from "@/lib/stripe";
 
 export type SubscriptionStatus = Awaited<ReturnType<typeof getSubscriptionStatus>>;
@@ -56,7 +56,10 @@ export async function startPlanTrial(planId: PlanId) {
   return startFamilyTrial(user.id, planId);
 }
 
-export async function createCheckoutSession(planId: PlanId) {
+export async function createCheckoutSession(
+  planId: PlanId,
+  interval: BillingInterval = "monthly"
+) {
   if (!isStripeConfigured()) {
     return { error: "Payments are not configured yet. Start a free trial instead." };
   }
@@ -68,10 +71,21 @@ export async function createCheckoutSession(planId: PlanId) {
   if (!user) return { error: "Not signed in" };
 
   const family = await requireFamilyOwner(user.id);
-  const priceId = stripePriceIdForPlan(planId);
-  if (!priceId) return { error: "Invalid plan for checkout" };
+  const priceId = stripePriceIdForPlan(planId, interval);
+  if (!priceId) {
+    return {
+      error:
+        interval === "annual"
+          ? "Annual pricing is not configured yet. Add STRIPE_PRICE_*_ANNUAL env vars."
+          : "Invalid plan for checkout",
+    };
+  }
 
   const siteUrl = getSiteUrl();
+  const pricing =
+    interval === "annual"
+      ? getPlan(planId).pricing.annual
+      : getPlan(planId).pricing.monthly;
 
   let customerId = family.stripe_customer_id ?? undefined;
   if (!customerId) {
@@ -94,9 +108,20 @@ export async function createCheckoutSession(planId: PlanId) {
     cancel_url: `${siteUrl}/dashboard/settings/plan?checkout=canceled`,
     subscription_data: {
       trial_period_days: 14,
-      metadata: { family_id: family.id, plan_id: planId },
+      metadata: { family_id: family.id, plan_id: planId, billing_interval: interval },
     },
-    metadata: { family_id: family.id, plan_id: planId },
+    metadata: {
+      family_id: family.id,
+      plan_id: planId,
+      billing_interval: interval,
+    },
+    ...(pricing && {
+      custom_text: {
+        submit: {
+          message: `14-day free trial, then ${pricing.price}${pricing.period} for your whole family.`,
+        },
+      },
+    }),
   });
 
   if (!session.url) return { error: "Could not create checkout session" };

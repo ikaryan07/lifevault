@@ -12,11 +12,11 @@ Australian family password sharing and legacy planning app.
 
 ## Plans
 
-| Plan | Price | Who pays | What you get |
-|------|-------|----------|--------------|
-| Free | $0 | — | Solo use, limited items |
-| Family | $6.99/mo | Family owner | Unlimited shared passwords & household info, up to 6 members |
-| Legacy | $12.99/mo | Family owner | Everything in Family + legacy planning tools |
+| Plan | Monthly | Annual | Who pays |
+|------|---------|--------|----------|
+| Free | $0 | — | — |
+| Family | $6.99/mo | $69/yr (save 2 months) | Family owner |
+| Legacy | $12.99/mo | $129/yr (save 2 months) | Family owner |
 
 See [SETUP.md](./SETUP.md) for full deployment instructions.
 
