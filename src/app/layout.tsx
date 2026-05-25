@@ -4,7 +4,6 @@ import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SkipLink } from "@/components/accessibility/skip-link";
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import "./globals.css";
 
 const inter = Inter({
@@ -63,6 +62,9 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </head>
       <body className="min-h-full flex flex-col font-sans">
+        <Script id="sw-cleanup" strategy="beforeInteractive">
+          {`(function(){if(!("serviceWorker"in navigator))return;navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister()})});if("caches"in window){caches.keys().then(function(k){k.forEach(function(n){caches.delete(n)})})}})();`}
+        </Script>
         <Script id="theme-init" strategy="beforeInteractive">
           {`(function(){try{var t=localStorage.getItem("homepin:theme");if(t==="dark"||(t==="system"||!t)&&matchMedia("(prefers-color-scheme:dark)").matches)document.documentElement.classList.add("dark")}catch(e){}})();`}
         </Script>
@@ -70,7 +72,6 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           <Toaster position="top-center" richColors closeButton />
-          <PWAInstallPrompt />
         </ThemeProvider>
       </body>
     </html>
