@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useVault } from "@/lib/store";
-import { getFamilyInfo, updateFamilyName } from "@/lib/actions/family-hub";
+import { updateFamilyName } from "@/lib/actions/family-hub";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,30 +11,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Users, Copy, Check, Crown, Link2 } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
-import type { FamilyInfo } from "@/lib/actions/family-hub";
 import { joinFamilyUrl } from "@/lib/auth/site-url";
 
+function MembersSkeleton() {
+  return (
+    <div className="animate-pulse space-y-6" aria-hidden>
+      <div className="space-y-2">
+        <div className="h-8 w-48 rounded-lg bg-muted" />
+        <div className="h-4 w-full max-w-lg rounded bg-muted" />
+      </div>
+      <div className="h-48 rounded-xl bg-muted" />
+      <div className="h-40 rounded-xl bg-muted" />
+    </div>
+  );
+}
+
 export default function FamilyMembersPage() {
-  const { cloudMode, family: contextFamily, refreshCloud } = useVault();
-  const [family, setFamily] = useState<FamilyInfo | null>(contextFamily);
+  const { cloudMode, family, refreshCloud, isHydrated, cloudLoading } = useVault();
   const [familyName, setFamilyName] = useState("");
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      if (!isSupabaseConfigured()) {
-        setLoading(false);
-        return;
-      }
-      const { family: f } = await getFamilyInfo();
-      setFamily(f);
-      if (f) setFamilyName(f.name);
-      setLoading(false);
-    }
-    load();
-  }, [contextFamily]);
+    if (family?.name) setFamilyName(family.name);
+  }, [family?.name]);
 
   if (!isSupabaseConfigured()) {
     return (
@@ -52,12 +52,10 @@ export default function FamilyMembersPage() {
     );
   }
 
-  if (loading) {
+  if (cloudMode && !isHydrated) {
     return (
       <PageTransition>
-        <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
+        <MembersSkeleton />
       </PageTransition>
     );
   }
@@ -77,15 +75,18 @@ export default function FamilyMembersPage() {
   }
 
   async function saveFamilyName() {
-    const result = await updateFamilyName(familyName);
-    if (result.error) {
-      toast.error(result.error);
-      return;
+    setSavingName(true);
+    try {
+      const result = await updateFamilyName(familyName);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Family name updated");
+      await refreshCloud();
+    } finally {
+      setSavingName(false);
     }
-    toast.success("Family name updated");
-    await refreshCloud();
-    const { family: f } = await getFamilyInfo();
-    setFamily(f);
   }
 
   return (
@@ -99,92 +100,117 @@ export default function FamilyMembersPage() {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Link2 className="h-5 w-5 text-primary" />
-              Invite your family
-            </CardTitle>
-            <CardDescription>
-              Send this link to your partner or kids. They create an account (or log in), then
-              join your family vault.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {family && (
-              <>
-                <div>
-                  <Label>Invite code</Label>
-                  <p className="mt-1 font-mono text-lg font-bold tracking-widest">
-                    {family.inviteCode}
+        {!family && cloudLoading ? (
+          <MembersSkeleton />
+        ) : (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5 text-primary" />
+                  Invite your family
+                </CardTitle>
+                <CardDescription>
+                  Send this link to your partner or kids. They create an account (or log in), then
+                  join your family vault.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {family ? (
+                  <>
+                    <div>
+                      <Label>Invite code</Label>
+                      <p className="mt-1 font-mono text-lg font-bold tracking-widest">
+                        {family.inviteCode}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Invite link</Label>
+                      <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+                        <Input readOnly value={inviteUrl} className="font-mono text-xs" />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="shrink-0 sm:min-w-24"
+                          onClick={copyInvite}
+                        >
+                          {copied ? (
+                            <>
+                              <Check className="mr-2 h-4 w-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copy link
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {cloudMode
+                      ? "Could not load your family yet. Try refreshing the page."
+                      : "Log in with your cloud account to invite family members."}
                   </p>
-                </div>
-                <div>
-                  <Label>Invite link</Label>
-                  <div className="mt-1 flex flex-col gap-2 sm:flex-row">
-                    <Input readOnly value={inviteUrl} className="font-mono text-xs" />
-                    <Button type="button" variant="outline" className="shrink-0 sm:min-w-24" onClick={copyInvite}>
-                      {copied ? (
-                        <>
-                          <Check className="mr-2 h-4 w-4" />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy link
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </>
+                )}
+              </CardContent>
+            </Card>
+
+            {family?.role === "owner" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Family name</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3 sm:flex-row">
+                  <Input
+                    value={familyName}
+                    onChange={(e) => setFamilyName(e.target.value)}
+                    placeholder="e.g. The Smith Family"
+                  />
+                  <Button
+                    onClick={saveFamilyName}
+                    disabled={savingName}
+                    className="shrink-0 sm:min-w-24"
+                  >
+                    {savingName ? "Saving…" : "Save"}
+                  </Button>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
 
-        {family?.role === "owner" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Family name</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                value={familyName}
-                onChange={(e) => setFamilyName(e.target.value)}
-                placeholder="e.g. The Smith Family"
-              />
-              <Button onClick={saveFamilyName} className="shrink-0 sm:min-w-24">
-                Save
-              </Button>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Who has access ({family?.members.length ?? 0})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {family?.members.length ? (
+                  <ul className="divide-y">
+                    {family.members.map((m) => (
+                      <li key={m.id} className="flex items-center justify-between py-3 first:pt-0">
+                        <div>
+                          <p className="font-medium">{m.displayName}</p>
+                          <p className="text-sm text-muted-foreground">{m.email}</p>
+                        </div>
+                        <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize">
+                          {m.role === "owner" && <Crown className="h-3 w-3 text-amber-600" />}
+                          {m.role}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No members listed yet.</p>
+                )}
+              </CardContent>
+            </Card>
+          </>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Who has access ({family?.members.length ?? 0})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="divide-y">
-              {family?.members.map((m) => (
-                <li key={m.id} className="flex items-center justify-between py-3 first:pt-0">
-                  <div>
-                    <p className="font-medium">{m.displayName}</p>
-                    <p className="text-sm text-muted-foreground">{m.email}</p>
-                  </div>
-                  <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium capitalize">
-                    {m.role === "owner" && <Crown className="h-3 w-3 text-amber-600" />}
-                    {m.role}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
 
         {!cloudMode && (
           <p className="text-sm text-muted-foreground">
