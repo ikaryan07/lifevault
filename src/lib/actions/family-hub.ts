@@ -163,67 +163,43 @@ export async function updateFamilyName(name: string) {
   return { success: true };
 }
 
-async function leaveEmptyOwnedFamily(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string
-) {
-  const familyId = await getActiveFamilyId(supabase, userId);
-  if (!familyId) return;
-
-  const { data: family } = await supabase
-    .from("families")
-    .select("owner_id")
-    .eq("id", familyId)
-    .maybeSingle();
-
-  if (family?.owner_id !== userId) {
-    throw new Error("You are already in a family. Ask the owner to invite you.");
-  }
-
-  const { count: credCount } = await supabase
-    .from("shared_credentials")
-    .select("*", { count: "exact", head: true })
-    .eq("family_id", familyId);
-
-  const { count: houseCount } = await supabase
-    .from("household_items")
-    .select("*", { count: "exact", head: true })
-    .eq("family_id", familyId);
-
-  const { count: memberCount } = await supabase
-    .from("family_members")
-    .select("*", { count: "exact", head: true })
-    .eq("family_id", familyId)
-    .eq("status", "active");
-
-  if ((credCount ?? 0) > 0 || (houseCount ?? 0) > 0 || (memberCount ?? 0) > 1) {
-    throw new Error(
-      "You already have a family vault with data. Use Family Members to invite others instead."
-    );
-  }
-
-  await supabase.from("family_members").delete().eq("family_id", familyId);
-  await supabase.from("families").delete().eq("id", familyId);
-}
-
 export async function joinFamilyByInviteCode(code: string) {
   if (!isSupabaseConfigured()) return { error: "Cloud not configured" };
   const { supabase, user } = await requireUser();
-  const normalized = code.trim().toLowerCase();
+  const normalized = code.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  if (!normalized) return { error: "Enter a valid invite code" };
 
   try {
-    await leaveEmptyOwnedFamily(supabase, user.id);
+    const { error: leaveErr } = await supabase.rpc("leave_solo_family_if_empty");
+    if (leaveErr) {
+      return { error: leaveErr.message };
+    }
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Cannot join family" };
   }
 
-  const { data: family, error: famErr } = await supabase
-    .from("families")
-    .select("id, name")
-    .eq("invite_code", normalized)
-    .maybeSingle();
+  const { data: families, error: famErr } = await supabase.rpc(
+    "find_family_by_invite_code",
+    { invite: normalized }
+  );
 
-  if (famErr || !family) return { error: "Invalid invite code" };
+  const family = Array.isArray(families) ? families[0] : families;
+
+  if (famErr || !family) return { error: "Invalid invite code — check it and try again" };
+
+  const existingFamilyId = await getActiveFamilyId(supabase, user.id);
+  if (existingFamilyId === family.id) {
+    revalidatePath("/dashboard");
+    return { success: true, familyName: family.name };
+  }
+
+  if (existingFamilyId) {
+    return {
+      error:
+        "You are already in a family vault. Each account can only belong to one family for now.",
+    };
+  }
 
   const meta = user.user_metadata as { first_name?: string; last_name?: string };
   const displayName = [meta?.first_name, meta?.last_name].filter(Boolean).join(" ").trim();
@@ -236,7 +212,13 @@ export async function joinFamilyByInviteCode(code: string) {
     display_name: displayName || user.email?.split("@")[0] || "Member",
   });
 
-  if (joinErr) return { error: joinErr.message };
+  if (joinErr) {
+    if (joinErr.code === "23505") {
+      revalidatePath("/dashboard");
+      return { success: true, familyName: family.name };
+    }
+    return { error: joinErr.message };
+  }
 
   revalidatePath("/dashboard");
   return { success: true, familyName: family.name };

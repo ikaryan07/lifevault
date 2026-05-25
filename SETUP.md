@@ -19,6 +19,8 @@ In the Supabase SQL Editor, **copy and paste the full SQL contents** (not file p
 
 If you already ran step 1 and get "policy already exists" errors, run only `supabase/run_002_family_only.sql`.
 
+3. **`supabase/migrations/003_invite_code_lookup.sql`** — required for family invite codes to work (run after 002).
+
 ## 3. Configure authentication
 
 In Supabase **Authentication → URL configuration**:
