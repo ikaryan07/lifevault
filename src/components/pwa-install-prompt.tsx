@@ -17,7 +17,7 @@ export function PWAInstallPrompt() {
     const handler = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e);
-      const dismissed = localStorage.getItem("HomePin:pwa-dismissed");
+      const dismissed = localStorage.getItem("homepin:pwa-dismissed");
       if (!dismissed) {
         setShow(true);
       }
@@ -39,7 +39,7 @@ export function PWAInstallPrompt() {
 
   function handleDismiss() {
     setShow(false);
-    localStorage.setItem("HomePin:pwa-dismissed", "true");
+    localStorage.setItem("homepin:pwa-dismissed", "true");
   }
 
   return (

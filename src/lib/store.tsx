@@ -1,7 +1,13 @@
 "use client";
 
-import { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
+import { createContext, useContext, useCallback, useMemo, ReactNode, useEffect } from "react";
 import { useLocalStorage } from "@/lib/hooks/use-local-storage";
+import { migrateLegacyStorageKeys, storageKeys } from "@/lib/storage-keys";
+import { useVaultCloud } from "@/lib/hooks/use-vault-cloud";
+import { useUser } from "@/lib/auth/hooks";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { syncSupabaseProfileToStorage } from "@/lib/auth/sync-profile";
+import type { FamilyInfo } from "@/lib/actions/family-hub";
 import type { DocumentCategory, TrustedContact, ImportantContact } from "@/types";
 
 export interface StoredDocument {
@@ -161,52 +167,92 @@ interface VaultStore {
   householdInfo: HouseholdItem[];
   setHouseholdInfo: Setter<HouseholdItem[]>;
   isHydrated: boolean;
+  cloudMode: boolean;
+  cloudLoading: boolean;
+  family: FamilyInfo | null;
+  refreshCloud: () => Promise<void>;
+  upsertCredential: (
+    entry: SharedCredential,
+    isNew: boolean
+  ) => Promise<{ entry?: SharedCredential; error?: string }>;
+  removeCredential: (id: string) => Promise<{ error?: string; success?: boolean }>;
+  upsertHousehold: (
+    item: HouseholdItem,
+    isNew: boolean
+  ) => Promise<{ item?: HouseholdItem; error?: string }>;
+  removeHousehold: (id: string) => Promise<{ error?: string; success?: boolean }>;
 }
 
 const VaultContext = createContext<VaultStore | null>(null);
 
 export function VaultProvider({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    migrateLegacyStorageKeys();
+  }, []);
+
   const [profile, setProfile, h1] = useLocalStorage<UserProfile | null>(
-    "HomePin:profile",
+    storageKeys.profile,
     null
   );
   const [planId, setPlanIdRaw, h0] = useLocalStorage<PlanId>(
-    "HomePin:plan",
+    storageKeys.plan,
     "free"
   );
   const [documents, setDocuments, h2] = useLocalStorage<StoredDocument[]>(
-    "HomePin:documents",
+    storageKeys.documents,
     []
   );
   const [trustedContacts, setTrustedContacts, h3] = useLocalStorage<TrustedContact[]>(
-    "HomePin:trusted-contacts",
+    storageKeys.trustedContacts,
     []
   );
   const [importantContacts, setImportantContacts, h4] = useLocalStorage<ImportantContact[]>(
-    "HomePin:important-contacts",
+    storageKeys.importantContacts,
     []
   );
   const [digitalAssets, setDigitalAssets, h5] = useLocalStorage<StoredDigitalAsset[]>(
-    "HomePin:digital-assets",
+    storageKeys.digitalAssets,
     []
   );
   const [checklist, setChecklist, h6] = useLocalStorage<StoredChecklistState>(
-    "HomePin:checklist",
+    storageKeys.checklist,
     { before: {}, after: {} }
   );
   const [sharedCredentials, setSharedCredentials, h7] = useLocalStorage<SharedCredential[]>(
-    "HomePin:shared-credentials",
+    storageKeys.sharedCredentials,
     []
   );
   const [householdInfo, setHouseholdInfo, h8] = useLocalStorage<HouseholdItem[]>(
-    "HomePin:household-info",
+    storageKeys.householdInfo,
     []
   );
 
   const plan = PLANS[planId] ?? PLANS.free;
   const setPlan = useCallback((id: PlanId) => setPlanIdRaw(id), [setPlanIdRaw]);
 
-  const isHydrated = h0 && h1 && h2 && h3 && h4 && h5 && h6 && h7 && h8;
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (!user || !isSupabaseConfigured()) return;
+    const synced = syncSupabaseProfileToStorage(user, profile);
+    setProfile(synced);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const localHydrated = h0 && h1 && h2 && h3 && h4 && h5 && h6 && h7 && h8;
+
+  const {
+    cloudMode,
+    cloudLoading,
+    cloudSynced,
+    family,
+    refreshCloud,
+    upsertCredential,
+    removeCredential,
+    upsertHousehold,
+    removeHousehold,
+  } = useVaultCloud(setSharedCredentials, setHouseholdInfo, localHydrated);
+
+  const isHydrated = localHydrated && (cloudMode ? cloudSynced : true);
 
   const value = useMemo(
     () => ({
@@ -229,6 +275,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       householdInfo,
       setHouseholdInfo,
       isHydrated,
+      cloudMode,
+      cloudLoading,
+      family,
+      refreshCloud,
+      upsertCredential,
+      removeCredential,
+      upsertHousehold,
+      removeHousehold,
     }),
     [
       profile, setProfile, plan, setPlan,
@@ -236,6 +290,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       importantContacts, setImportantContacts, digitalAssets, setDigitalAssets,
       checklist, setChecklist, sharedCredentials, setSharedCredentials,
       householdInfo, setHouseholdInfo, isHydrated,
+      cloudMode, cloudLoading, family, refreshCloud,
+      upsertCredential, removeCredential, upsertHousehold, removeHousehold,
     ]
   );
 

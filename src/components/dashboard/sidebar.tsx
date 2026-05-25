@@ -23,6 +23,7 @@ import { signOutClient } from "@/lib/auth/sign-out";
 const familyHubItems = [
   { href: "/dashboard/family/passwords", label: "Passwords & Logins", icon: KeyRound },
   { href: "/dashboard/family/household", label: "Household Info", icon: Home },
+  { href: "/dashboard/family/members", label: "Family Members", icon: Users },
 ];
 
 const legacyVaultItems = [

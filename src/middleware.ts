@@ -1,13 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-const isSupabaseConfigured =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+import { isSupabaseConfigured } from "@/lib/auth/demo";
 
 export async function middleware(request: NextRequest) {
-  // Demo mode: skip auth checks when Supabase isn't configured
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured()) {
     return NextResponse.next();
   }
 
@@ -38,15 +34,31 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  const { pathname } = request.nextUrl;
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
+  const isProtected =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/join-family";
+
+  if (!user && isProtected) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = pathname === "/join-family" ? "/login" : "/login";
+    url.searchParams.set(
+      "next",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`
+    );
+    if (pathname === "/join-family") {
+      url.searchParams.set("force", "1");
+    }
     return NextResponse.redirect(url);
   }
 
-  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
+  if (user && isAuthPage && request.nextUrl.searchParams.get("force") !== "1") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    const next = request.nextUrl.searchParams.get("next");
+    url.pathname = next && next.startsWith("/") ? next : "/dashboard";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
@@ -54,5 +66,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/signup"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/login",
+    "/signup",
+    "/join-family",
+  ],
 };

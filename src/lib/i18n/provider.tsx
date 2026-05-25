@@ -20,12 +20,12 @@ const I18nContext = createContext<I18nContextType>({
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>(() => {
     if (typeof window === "undefined") return "en";
-    return (localStorage.getItem("HomePin:locale") as Locale) || "en";
+    return (localStorage.getItem("homepin:locale") as Locale) || "en";
   });
 
   function handleSetLocale(newLocale: Locale) {
     setLocale(newLocale);
-    localStorage.setItem("HomePin:locale", newLocale);
+    localStorage.setItem("homepin:locale", newLocale);
     document.documentElement.dir = getDirection(newLocale);
     document.documentElement.lang = newLocale;
   }

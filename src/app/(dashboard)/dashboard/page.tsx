@@ -41,6 +41,7 @@ export default function DashboardPage() {
     sharedCredentials,
     householdInfo,
     isHydrated,
+    cloudMode,
   } = useVault();
 
   if (!isHydrated) {
@@ -166,6 +167,28 @@ export default function DashboardPage() {
                 <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground/60" />
               </Link>
             </StaggerItem>
+
+            {cloudMode && (
+              <StaggerItem>
+                <Link
+                  href="/dashboard/family/members"
+                  className="group flex items-center gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-all hover:border-teal-500/30 hover:shadow-lg hover:shadow-teal-500/5 hover:-translate-y-0.5 sm:col-span-2"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 transition-colors group-hover:bg-teal-500">
+                    <Users className="h-6 w-6 text-teal-600 transition-colors group-hover:text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-semibold text-foreground">
+                      Family Members
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      Invite your partner or kids — everyone sees the same passwords
+                    </p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground/60" />
+                </Link>
+              </StaggerItem>
+            )}
           </StaggerContainer>
         </div>
 

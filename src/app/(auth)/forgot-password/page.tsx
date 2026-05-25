@@ -5,8 +5,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, ArrowLeft, Mail, Info } from "lucide-react";
-import { resetPassword } from "@/lib/auth/actions";
+import { MapPin, ArrowLeft, Mail, Info } from "lucide-react";
+import { resetPasswordClient } from "@/lib/auth/client";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
@@ -20,9 +20,11 @@ export default function ForgotPasswordPage() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const result = await resetPassword(formData);
+    const email = (formData.get("email") as string)?.trim() ?? "";
 
-    if (result.error) {
+    const result = await resetPasswordClient(email);
+
+    if ("error" in result && result.error) {
       setError(result.error);
       setLoading(false);
     } else {
@@ -36,7 +38,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center">
         <Link href="/" className="mb-8 flex items-center justify-center gap-2.5 lg:hidden">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+            <MapPin className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
@@ -44,15 +46,15 @@ export default function ForgotPasswordPage() {
           <Mail className="h-8 w-8 text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-foreground">
-          {isSupabaseConfigured ? "Check your email" : "Demo mode"}
+          {isSupabaseConfigured() ? "Check your email" : "Demo mode"}
         </h1>
         <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
-          {isSupabaseConfigured
+          {isSupabaseConfigured()
             ? "We've sent you a link to reset your password. It may take a minute to arrive — check your spam folder if you don't see it."
             : "Password reset emails are only sent when HomePin is connected to Supabase. In demo mode, just sign in with your email to continue."}
         </p>
         <Link
-          href="/login"
+          href="/login?force=1"
           className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -67,7 +69,7 @@ export default function ForgotPasswordPage() {
       <div className="mb-8 lg:hidden">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+            <MapPin className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
@@ -76,8 +78,8 @@ export default function ForgotPasswordPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Reset your password</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Enter the email address you used to create your account and we&apos;ll
-          send you a link to reset your password.
+          Enter the email address you used to create your account and we&apos;ll send you a link
+          to reset your password.
         </p>
       </div>
 
@@ -95,12 +97,15 @@ export default function ForgotPasswordPage() {
         </div>
 
         {error && (
-          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         )}
 
-        {!isSupabaseConfigured && (
+        {!isSupabaseConfigured() && (
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>You&apos;re in demo mode. No real email will be sent.</span>
@@ -113,7 +118,7 @@ export default function ForgotPasswordPage() {
       </form>
 
       <Link
-        href="/login"
+        href="/login?force=1"
         className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
       >
         <ArrowLeft className="h-4 w-4" />

@@ -84,7 +84,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     async function loadMessages() {
-      if (!isSupabaseConfigured) {
+      if (!isSupabaseConfigured()) {
         setMessages(safeParse<Message[]>(localStorage.getItem(STORAGE_KEY), []));
         setLoading(false);
         return;
@@ -174,7 +174,7 @@ export default function MessagesPage() {
       return;
     }
 
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured()) {
       const newMessage: Message = {
         id: crypto.randomUUID(),
         title: title.trim(),
@@ -248,7 +248,7 @@ export default function MessagesPage() {
   async function confirmDelete() {
     if (!deleteId) return;
     const id = deleteId;
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured()) {
       const updated = messages.filter((m) => m.id !== id);
       setMessages(updated);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

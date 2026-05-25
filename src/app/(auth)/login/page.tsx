@@ -1,19 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Eye, EyeOff } from "lucide-react";
-import { signIn } from "@/lib/auth/actions";
+import {
+  completeDemoSignIn,
+  prepareFreshLogin,
+  signInClient,
+} from "@/lib/auth/client";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.get("error") === "auth_callback_error") {
+        setError(
+          "That email link has expired or is invalid. Sign in below, or sign up again."
+        );
+      }
+
+      if (params.get("force") === "1") {
+        await prepareFreshLogin();
+      }
+
+      setReady(true);
+    }
+
+    init();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,20 +45,38 @@ export default function LoginPage() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const result = await signIn(formData);
+    const email = (formData.get("email") as string)?.trim() ?? "";
+    const password = formData.get("password") as string;
 
-    if (result && "error" in result && result.error) {
-      setError(result.error);
+    try {
+      const result = await signInClient(email, password);
+
+      if ("error" in result && result.error) {
+        setError(result.error);
+        return;
+      }
+
+      if ("success" in result && result.success === "demo") {
+        completeDemoSignIn(email);
+        window.location.href = "/dashboard";
+        return;
+      }
+
+      const next = new URLSearchParams(window.location.search).get("next");
+      window.location.href = next && next.startsWith("/") ? next : "/dashboard";
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-    } else if (result && "success" in result && result.success === "demo") {
-      const email = formData.get("email") as string;
-      localStorage.setItem(
-        "homepin:profile",
-        JSON.stringify({ firstName: "", lastName: "", email, createdAt: new Date().toISOString() })
-      );
-      localStorage.setItem("homepin:welcome-complete", "true");
-      router.push("/dashboard");
     }
+  }
+
+  if (!ready && isSupabaseConfigured()) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
   return (
@@ -103,7 +145,10 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         )}
@@ -115,10 +160,7 @@ export default function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link
-          href="/signup"
-          className="font-medium text-primary hover:underline"
-        >
+        <Link href="/signup" className="font-medium text-primary hover:underline">
           Create one
         </Link>
       </p>

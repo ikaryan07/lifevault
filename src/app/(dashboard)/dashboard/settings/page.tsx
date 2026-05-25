@@ -90,7 +90,7 @@ export default function SettingsPage() {
         if (!Number.isNaN(days) && days > 0) setCheckInDays(days);
       }
 
-      if (!isSupabaseConfigured) {
+      if (!isSupabaseConfigured()) {
         if (profile) {
           setFirstName(profile.firstName || "");
           setLastName(profile.lastName || "");
@@ -127,7 +127,7 @@ export default function SettingsPage() {
         localStorage.setItem(CHECKIN_KEY, String(checkInDays));
       }
 
-      if (!isSupabaseConfigured) {
+      if (!isSupabaseConfigured()) {
         setProfile({
           firstName,
           lastName,
@@ -204,7 +204,7 @@ export default function SettingsPage() {
       return;
     }
 
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured()) {
       // Demo mode — clear all local data and sign out
       if (typeof window !== "undefined") {
         const keysToRemove: string[] = [];

@@ -111,7 +111,15 @@ const ideaSuggestions: { label: string; hint: string; category: HouseholdCategor
 ];
 
 export default function HouseholdPage() {
-  const { householdInfo, setHouseholdInfo, plan, isHydrated } = useVault();
+  const {
+    householdInfo,
+    setHouseholdInfo,
+    plan,
+    isHydrated,
+    cloudMode,
+    upsertHousehold,
+    removeHousehold,
+  } = useVault();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<HouseholdItem | null>(null);
@@ -167,7 +175,7 @@ export default function HouseholdPage() {
     setDialogOpen(true);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!itemLabel.trim()) {
       toast.error("Please enter a label");
       return;
@@ -177,6 +185,7 @@ export default function HouseholdPage() {
       return;
     }
 
+    const isNew = !editing;
     const entry: HouseholdItem = {
       id: editing?.id || crypto.randomUUID(),
       category,
@@ -186,23 +195,50 @@ export default function HouseholdPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    if (editing) {
+    if (cloudMode) {
+      const result = await upsertHousehold(entry, isNew);
+      if (result.error) {
+        toast.error("Could not save", { description: result.error });
+        return;
+      }
+      const saved = result.item!;
+      if (editing) {
+        setHouseholdInfo((prev) =>
+          prev.map((item) => (item.id === editing.id ? saved : item))
+        );
+      } else {
+        setHouseholdInfo((prev) => [saved, ...prev]);
+      }
+    } else if (editing) {
       setHouseholdInfo((prev) =>
         prev.map((item) => (item.id === editing.id ? entry : item))
       );
-      toast.success("Updated", { description: `${itemLabel} has been updated.` });
     } else {
       setHouseholdInfo((prev) => [entry, ...prev]);
-      toast.success("Added", { description: `${itemLabel} has been saved.` });
     }
 
+    toast.success(editing ? "Updated" : "Added", {
+      description: cloudMode
+        ? `${itemLabel} saved — your whole family can see it.`
+        : `${itemLabel} has been saved on this device.`,
+    });
     setDialogOpen(false);
     resetForm();
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteId) return;
     const item = householdInfo.find((i) => i.id === deleteId);
+
+    if (cloudMode) {
+      const result = await removeHousehold(deleteId);
+      if (result.error) {
+        toast.error("Could not delete", { description: result.error });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     setHouseholdInfo((prev) => prev.filter((i) => i.id !== deleteId));
     toast.success("Deleted", { description: `${item?.label || "Item"} has been removed.` });
     setDeleteId(null);

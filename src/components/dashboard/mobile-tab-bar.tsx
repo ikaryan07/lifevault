@@ -32,6 +32,7 @@ const tabs = [
 ];
 
 const moreItems = [
+  { href: "/dashboard/family/members", label: "Family Members", icon: Users },
   { href: "/dashboard/family/household", label: "Household Info", icon: Home },
   { href: "/dashboard/contacts", label: "Trusted People", icon: Users },
   { href: "/dashboard/directory", label: "Key Contacts", icon: BookUser },

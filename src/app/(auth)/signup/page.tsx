@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Eye, EyeOff, Check, Sparkles } from "lucide-react";
-import { signUp } from "@/lib/auth/actions";
+import { MapPin, Eye, EyeOff, Check, Sparkles } from "lucide-react";
+import { completeDemoSignUp, signUpClient } from "@/lib/auth/client";
+import { storageKeys } from "@/lib/storage-keys";
 
 const planLabels: Record<string, { name: string; tagline: string }> = {
   family: { name: "Family", tagline: "14-day free trial — no card required" },
@@ -25,19 +25,24 @@ function passwordIsValid(p: string) {
 }
 
 export default function SignupPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState<{ name: string; tagline: string } | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<{ name: string; tagline: string } | null>(
+    null
+  );
+  const [joinCode, setJoinCode] = useState("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const planKey = new URLSearchParams(window.location.search).get("plan") || "";
+    const params = new URLSearchParams(window.location.search);
+    const planKey = params.get("plan") || "";
     if (planLabels[planKey]) {
       setSelectedPlan(planLabels[planKey]);
     }
+    const join = params.get("join");
+    if (join) setJoinCode(join);
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -52,34 +57,52 @@ export default function SignupPage() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const result = await signUp(formData);
+    const firstName = (formData.get("firstName") as string)?.trim() ?? "";
+    const lastName = (formData.get("lastName") as string)?.trim() ?? "";
+    const email = (formData.get("email") as string)?.trim() ?? "";
 
-    if (result && "error" in result && result.error) {
-      setError(result.error);
-      setLoading(false);
-    } else if (result && "success" in result && result.success === "demo") {
-      const demo = result as {
-        success: "demo";
-        firstName: string;
-        lastName: string;
-        email: string;
-      };
-      localStorage.setItem(
-        "homepin:profile",
-        JSON.stringify({
-          firstName: demo.firstName,
-          lastName: demo.lastName,
-          email: demo.email,
-          createdAt: new Date().toISOString(),
-        })
-      );
-      const planKey = new URLSearchParams(window.location.search).get("plan");
-      if (planKey === "family" || planKey === "legacy") {
-        localStorage.setItem("homepin:plan", JSON.stringify(planKey));
+    try {
+      const result = await signUpClient(firstName, lastName, email, password);
+
+      if ("error" in result && result.error) {
+        setError(result.error);
+        return;
       }
-      router.push("/dashboard/welcome");
-    } else {
-      router.push("/verify-email");
+
+      if ("success" in result && result.success === "demo") {
+        completeDemoSignUp(firstName, lastName, email);
+        const planKey = new URLSearchParams(window.location.search).get("plan");
+        if (planKey === "family" || planKey === "legacy") {
+          localStorage.setItem(storageKeys.plan, JSON.stringify(planKey));
+        }
+        window.location.href = "/dashboard/welcome";
+        return;
+      }
+
+      if (
+        "success" in result &&
+        result.success === true &&
+        "hasSession" in result &&
+        result.hasSession
+      ) {
+        const destination = joinCode
+          ? `/join-family?code=${encodeURIComponent(joinCode)}`
+          : "/dashboard/welcome";
+        window.location.href = destination;
+        return;
+      }
+
+      if ("success" in result && result.success === "verify_email") {
+        sessionStorage.setItem("homepin:pending-email", email);
+        window.location.href = "/verify-email";
+        return;
+      }
+
+      setError("Sign up failed. Please try again.");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -88,20 +111,27 @@ export default function SignupPage() {
       <div className="mb-8 lg:hidden">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+            <MapPin className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-foreground">HomePin</span>
         </Link>
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          Create your vault
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground">Create your vault</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Start organising your important documents today. Free to get started.
         </p>
       </div>
+
+      {joinCode && (
+        <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
+          <p className="font-semibold text-foreground">Joining a family vault</p>
+          <p className="mt-1 text-muted-foreground">
+            After you create your account, you&apos;ll be added to the family automatically.
+          </p>
+        </div>
+      )}
 
       {selectedPlan && (
         <div className="mt-6 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3">
@@ -109,9 +139,7 @@ export default function SignupPage() {
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div className="flex-1 text-sm">
-            <p className="font-semibold text-foreground">
-              {selectedPlan.name} plan selected
-            </p>
+            <p className="font-semibold text-foreground">{selectedPlan.name} plan selected</p>
             <p className="text-xs text-muted-foreground">{selectedPlan.tagline}</p>
           </div>
         </div>
@@ -172,11 +200,7 @@ export default function SignupPage() {
               aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {password && (
@@ -190,9 +214,7 @@ export default function SignupPage() {
                       passed ? "text-green-600" : "text-muted-foreground"
                     }`}
                   >
-                    <Check
-                      className={`h-3 w-3 ${passed ? "opacity-100" : "opacity-40"}`}
-                    />
+                    <Check className={`h-3 w-3 ${passed ? "opacity-100" : "opacity-40"}`} />
                     {req.label}
                   </li>
                 );
@@ -202,7 +224,10 @@ export default function SignupPage() {
         </div>
 
         {error && (
-          <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {error}
           </p>
         )}
@@ -231,10 +256,7 @@ export default function SignupPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link
-          href="/login"
-          className="font-medium text-primary hover:underline"
-        >
+        <Link href="/login?force=1" className="font-medium text-primary hover:underline">
           Sign in
         </Link>
       </p>

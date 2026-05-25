@@ -62,7 +62,15 @@ const categoryColors: Record<CredentialCategory, string> = {
 };
 
 export default function PasswordsPage() {
-  const { sharedCredentials, setSharedCredentials, plan, isHydrated } = useVault();
+  const {
+    sharedCredentials,
+    setSharedCredentials,
+    plan,
+    isHydrated,
+    cloudMode,
+    upsertCredential,
+    removeCredential,
+  } = useVault();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<SharedCredential | null>(null);
@@ -126,12 +134,13 @@ export default function PasswordsPage() {
     setDialogOpen(true);
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!name.trim()) {
       toast.error("Please enter a name");
       return;
     }
 
+    const isNew = !editing;
     const entry: SharedCredential = {
       id: editing?.id || crypto.randomUUID(),
       category,
@@ -144,23 +153,50 @@ export default function PasswordsPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    if (editing) {
+    if (cloudMode) {
+      const result = await upsertCredential(entry, isNew);
+      if (result.error) {
+        toast.error("Could not save", { description: result.error });
+        return;
+      }
+      const saved = result.entry!;
+      if (editing) {
+        setSharedCredentials((prev) =>
+          prev.map((c) => (c.id === editing.id ? saved : c))
+        );
+      } else {
+        setSharedCredentials((prev) => [saved, ...prev]);
+      }
+    } else if (editing) {
       setSharedCredentials((prev) =>
         prev.map((c) => (c.id === editing.id ? entry : c))
       );
-      toast.success("Updated", { description: `${name} has been updated.` });
     } else {
       setSharedCredentials((prev) => [entry, ...prev]);
-      toast.success("Added", { description: `${name} has been saved.` });
     }
 
+    toast.success(editing ? "Updated" : "Added", {
+      description: cloudMode
+        ? `${name} saved — your whole family can see it.`
+        : `${name} has been saved on this device.`,
+    });
     setDialogOpen(false);
     resetForm();
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!deleteId) return;
     const cred = sharedCredentials.find((c) => c.id === deleteId);
+
+    if (cloudMode) {
+      const result = await removeCredential(deleteId);
+      if (result.error) {
+        toast.error("Could not delete", { description: result.error });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     setSharedCredentials((prev) => prev.filter((c) => c.id !== deleteId));
     toast.success("Deleted", { description: `${cred?.name || "Item"} has been removed.` });
     setDeleteId(null);

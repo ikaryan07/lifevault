@@ -17,7 +17,7 @@ export default function EmergencyCardPage() {
 
   useEffect(() => {
     async function loadUser() {
-      if (!isSupabaseConfigured) {
+      if (!isSupabaseConfigured()) {
         if (profile) {
           setUserName(
             `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
