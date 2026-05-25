@@ -21,6 +21,8 @@ If you already ran step 1 and get "policy already exists" errors, run only `supa
 
 3. **`supabase/migrations/003_invite_code_lookup.sql`** — required for family invite codes to work (run after 002).
 
+   Shortcut: `supabase/run_003_006_invite.sql` includes 003 + 006 invite RPCs in one file.
+
 4. **`supabase/migrations/004_subscriptions.sql`** — family-level plans, trials, and Stripe fields (run after 003).
 
 5. **`supabase/migrations/005_production_ready.sql`** — vault access policies, document storage bucket, invite acceptance (run after 004).

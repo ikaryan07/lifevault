@@ -39,7 +39,8 @@ export async function signUpClient(
   firstName: string,
   lastName: string,
   email: string,
-  password: string
+  password: string,
+  postAuthNext?: string
 ) {
   if (!isSupabaseConfigured()) {
     return { success: "demo" as const, firstName, lastName, email };
@@ -51,7 +52,7 @@ export async function signUpClient(
     password,
     options: {
       data: { first_name: firstName.trim(), last_name: lastName.trim() },
-      emailRedirectTo: authCallbackUrl("/dashboard/welcome"),
+      emailRedirectTo: authCallbackUrl(postAuthNext ?? "/dashboard/welcome"),
     },
   });
 
@@ -99,7 +100,7 @@ export async function resetPasswordClient(email: string) {
   return { success: "Check your email for a password reset link." };
 }
 
-export async function resendVerificationEmail(email: string) {
+export async function resendVerificationEmail(email: string, postAuthNext?: string) {
   if (!isSupabaseConfigured()) {
     return { error: "Cloud sign-in is not configured." };
   }
@@ -109,7 +110,7 @@ export async function resendVerificationEmail(email: string) {
     type: "signup",
     email: email.trim(),
     options: {
-      emailRedirectTo: authCallbackUrl("/dashboard/welcome"),
+      emailRedirectTo: authCallbackUrl(postAuthNext ?? "/dashboard/welcome"),
     },
   });
 

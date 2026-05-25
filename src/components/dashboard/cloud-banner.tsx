@@ -13,7 +13,7 @@ const bannerShell =
 const DISMISS_KEY = "homepin:cloud-banner-dismissed";
 
 export function CloudBanner() {
-  const { cloudMode, family } = useVault();
+  const { cloudMode, family, encryptionReady, cloudSyncError } = useVault();
   const { user, loading: authLoading } = useUser();
   const [mounted, setMounted] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -85,6 +85,41 @@ export function CloudBanner() {
   }
 
   if (dismissed) return null;
+
+  if (cloudMode && !encryptionReady) {
+    return (
+      <div
+        className={cn(
+          bannerShell,
+          "border border-destructive/40 bg-destructive/5 text-destructive"
+        )}
+      >
+        <CloudOff className="h-4 w-4 shrink-0" />
+        <p className="flex-1 text-sm">
+          <strong>Encryption not configured</strong> — set ENCRYPTION_SECRET in Vercel so family
+          passwords can be saved.
+        </p>
+      </div>
+    );
+  }
+
+  if (cloudSyncError) {
+    return (
+      <div className={cn(bannerShell, "border border-destructive/40 bg-destructive/5")}>
+        <CloudOff className="h-4 w-4 shrink-0 text-destructive" />
+        <p className="flex-1 text-sm text-destructive">
+          <strong>Sync issue:</strong> {cloudSyncError}
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="text-xs font-semibold text-destructive underline"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(bannerShell, "relative border border-primary/30 bg-primary/5 pr-10")}>

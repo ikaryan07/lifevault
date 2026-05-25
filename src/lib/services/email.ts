@@ -1,3 +1,5 @@
+import { getServerSiteUrl } from "@/lib/auth/site-url";
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 interface SendEmailOptions {
@@ -6,10 +8,14 @@ interface SendEmailOptions {
   html: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+export type SendEmailResult =
+  | { success: true; mock?: false }
+  | { success: false; mock: true; error: string };
+
+export async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<SendEmailResult> {
   if (!RESEND_API_KEY) {
     console.warn("[Email] No RESEND_API_KEY set, skipping email send");
-    return { success: true, mock: true };
+    return { success: false, mock: true, error: "Email service not configured (RESEND_API_KEY missing)" };
   }
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -34,8 +40,12 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
   return { success: true };
 }
 
+function siteUrlForEmail(): string {
+  return getServerSiteUrl();
+}
+
 export function invitationEmail(inviterName: string, token: string) {
-  const acceptUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/invite/${token}`;
+  const acceptUrl = `${siteUrlForEmail()}/invite/${token}`;
   return {
     subject: `${inviterName} has added you as a trusted contact on HomePin`,
     html: `
@@ -74,7 +84,7 @@ export function invitationEmail(inviterName: string, token: string) {
 }
 
 export function checkInReminderEmail(userName: string, daysSinceLogin: number) {
-  const checkInUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/login`;
+  const checkInUrl = `${siteUrlForEmail()}/login`;
   return {
     subject: `HomePin check-in: Are you okay, ${userName}?`,
     html: `
@@ -121,7 +131,7 @@ export function vaultAccessRequestEmail(ownerName: string, requesterName: string
             If you believe this request is legitimate, you can confirm it below.
           </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/vault-access" style="background: #1a5276; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+            <a href="${siteUrlForEmail()}/dashboard/vault-access" style="background: #1a5276; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
               Review Request
             </a>
           </div>

@@ -47,9 +47,22 @@ export async function POST(request: Request) {
 
   try {
     const emailContent = invitationEmail(inviterName, token);
-    await sendEmail({ to: email, ...emailContent });
+    const emailResult = await sendEmail({ to: email, ...emailContent });
+    if (!emailResult.success && emailResult.mock) {
+      return NextResponse.json({
+        success: true,
+        contact,
+        emailWarning:
+          "Contact saved, but the invitation email could not be sent. Share the invite link manually until email is configured.",
+      });
+    }
   } catch (err) {
     console.error("Failed to send invitation email:", err);
+    return NextResponse.json({
+      success: true,
+      contact,
+      emailWarning: "Contact saved, but the invitation email failed to send.",
+    });
   }
 
   await supabase.from("audit_log").insert({

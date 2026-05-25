@@ -4,8 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useUser } from "@/lib/auth/hooks";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import {
-  fetchFamilyHubData,
-  getFamilyInfo,
+  fetchFamilyHubBundle,
   saveCredential,
   deleteCredential,
   saveHouseholdItem,
@@ -13,6 +12,7 @@ import {
   type FamilyInfo,
 } from "@/lib/actions/family-hub";
 import type { SharedCredential, HouseholdItem } from "@/lib/store";
+import { toast } from "sonner";
 
 export function useVaultCloud(
   setSharedCredentials: (v: SharedCredential[] | ((p: SharedCredential[]) => SharedCredential[])) => void,
@@ -23,6 +23,8 @@ export function useVaultCloud(
   const [family, setFamily] = useState<FamilyInfo | null>(null);
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudSynced, setCloudSynced] = useState(false);
+  const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
+  const [encryptionReady, setEncryptionReady] = useState(true);
   const initialSyncDoneRef = useRef(false);
 
   const cloudMode = isSupabaseConfigured() && !!user;
@@ -30,19 +32,26 @@ export function useVaultCloud(
   const refreshCloud = useCallback(async () => {
     if (!cloudMode) return;
     setCloudLoading(true);
+    setCloudSyncError(null);
     try {
-      const [hub, fam] = await Promise.all([fetchFamilyHubData(), getFamilyInfo()]);
-      if (hub) {
-        setSharedCredentials(hub.credentials);
-        setHouseholdInfo(hub.household);
+      const bundle = await fetchFamilyHubBundle();
+      if (bundle) {
+        setSharedCredentials(bundle.credentials);
+        setHouseholdInfo(bundle.household);
+        setFamily(bundle.family);
+        setEncryptionReady(bundle.encryptionReady);
+        if (!bundle.encryptionReady) {
+          toast.error("Server encryption is not configured — passwords cannot be saved.");
+        }
       }
-      setFamily(fam.family);
       setCloudSynced(true);
     } catch (e) {
-      console.error("Cloud sync failed:", e);
+      const message = e instanceof Error ? e.message : "Cloud sync failed";
+      setCloudSyncError(message);
+      toast.error(message);
+      setCloudSynced(true);
     } finally {
       setCloudLoading(false);
-      setCloudSynced(true);
     }
   }, [cloudMode, setSharedCredentials, setHouseholdInfo]);
 
@@ -109,6 +118,8 @@ export function useVaultCloud(
     cloudMode,
     cloudLoading,
     cloudSynced,
+    cloudSyncError,
+    encryptionReady,
     family,
     refreshCloud,
     upsertCredential,

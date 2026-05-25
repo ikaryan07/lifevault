@@ -150,6 +150,8 @@ interface VaultStore {
   isHydrated: boolean;
   cloudMode: boolean;
   cloudLoading: boolean;
+  cloudSyncError: string | null;
+  encryptionReady: boolean;
   family: FamilyInfo | null;
   refreshCloud: () => Promise<void>;
   upsertCredential: (
@@ -250,6 +252,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     cloudMode,
     cloudLoading,
     cloudSynced,
+    cloudSyncError,
+    encryptionReady,
     family,
     refreshCloud,
     upsertCredential,
@@ -267,8 +271,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       setChecklist,
     },
     { trustedContacts, importantContacts, digitalAssets, documents, checklist },
-    localHydrated,
-    cloudMode ? cloudSynced : true
+    localHydrated
   );
 
   const isHydrated = localHydrated && (cloudMode ? cloudSynced && legacyCloud.legacySynced : true);
@@ -301,6 +304,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       isHydrated,
       cloudMode,
       cloudLoading,
+      cloudSyncError,
+      encryptionReady,
       family,
       refreshCloud,
       upsertCredential,
@@ -321,8 +326,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       documents, setDocuments, trustedContacts, setTrustedContacts,
       importantContacts, setImportantContacts, digitalAssets, setDigitalAssets,
       checklist, setChecklist, sharedCredentials, setSharedCredentials,
-      householdInfo, setHouseholdInfo, isHydrated,
-      cloudMode, cloudLoading, family, refreshCloud,
+      householdInfo, setHouseholdInfo,       isHydrated,
+      cloudMode, cloudLoading, cloudSyncError, encryptionReady, family, refreshCloud,
       upsertCredential, removeCredential, upsertHousehold, removeHousehold,
       legacyCloud,
     ]

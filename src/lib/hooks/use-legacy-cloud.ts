@@ -21,6 +21,7 @@ import type {
   StoredChecklistState,
 } from "@/lib/store";
 import type { TrustedContact, ImportantContact } from "@/types";
+import { toast } from "sonner";
 
 type LocalSnapshot = {
   trustedContacts: TrustedContact[];
@@ -41,8 +42,7 @@ type LegacySetters = {
 export function useLegacyCloud(
   setters: LegacySetters,
   localSnapshot: LocalSnapshot,
-  isLocalHydrated: boolean,
-  familyCloudSynced: boolean
+  isLocalHydrated: boolean
 ) {
   const { user, loading: authLoading } = useUser();
   const [legacySynced, setLegacySynced] = useState(false);
@@ -74,7 +74,8 @@ export function useLegacyCloud(
       }
       if (force) initialSyncDoneRef.current = true;
     } catch (e) {
-      console.error("Legacy cloud sync failed:", e);
+      const message = e instanceof Error ? e.message : "Legacy sync failed";
+      toast.error(message);
     } finally {
       setLegacySynced(true);
     }
@@ -86,10 +87,10 @@ export function useLegacyCloud(
       setLegacySynced(true);
       return;
     }
-    if (!familyCloudSynced || initialSyncDoneRef.current) return;
+    if (initialSyncDoneRef.current) return;
     initialSyncDoneRef.current = true;
     refreshLegacy();
-  }, [cloudMode, isLocalHydrated, authLoading, familyCloudSynced, refreshLegacy]);
+  }, [cloudMode, isLocalHydrated, authLoading, refreshLegacy]);
 
   const removeTrusted = useCallback(
     async (id: string) => {

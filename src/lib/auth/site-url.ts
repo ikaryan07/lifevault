@@ -1,4 +1,6 @@
 /** Canonical site URL for auth email links and invite links (no trailing slash). */
+import { safeRedirectPath } from "@/lib/auth/safe-redirect";
+
 export function getSiteUrl(): string {
   // In the browser, prefer the live origin (fixes mobile + avoids stale build-time env)
   if (typeof window !== "undefined") {
@@ -36,8 +38,9 @@ export function getServerSiteUrl(): string {
 
 export function authCallbackUrl(next?: string): string {
   const base = `${getSiteUrl()}/auth/callback`;
-  if (next && next.startsWith("/")) {
-    return `${base}?next=${encodeURIComponent(next)}`;
+  const safe = safeRedirectPath(next ?? null);
+  if (safe) {
+    return `${base}?next=${encodeURIComponent(safe)}`;
   }
   return base;
 }
@@ -57,8 +60,9 @@ export function joinFamilyUrl(inviteCode: string): string {
 
 export function loginUrl(next?: string): string {
   const base = `${getSiteUrl()}/login`;
-  if (next && next.startsWith("/")) {
-    return `${base}?force=1&next=${encodeURIComponent(next)}`;
+  const safe = safeRedirectPath(next ?? null);
+  if (safe) {
+    return `${base}?force=1&next=${encodeURIComponent(safe)}`;
   }
   return `${base}?force=1`;
 }

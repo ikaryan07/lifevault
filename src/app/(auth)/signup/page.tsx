@@ -9,6 +9,11 @@ import { MapPin, Eye, EyeOff, Check, Sparkles } from "lucide-react";
 import { completeDemoSignUp, signUpClient } from "@/lib/auth/client";
 import { startPlanTrial } from "@/lib/actions/subscription";
 import { joinFamilyPath } from "@/lib/auth/site-url";
+import {
+  setPendingJoinCode,
+  clearPendingJoin,
+} from "@/lib/auth/pending-join";
+import { loginPathWithNext } from "@/lib/auth/safe-redirect";
 import { storageKeys } from "@/lib/storage-keys";
 import type { PlanId, BillingInterval } from "@/lib/plans";
 import { getPlanPricing } from "@/lib/plans";
@@ -54,7 +59,10 @@ export default function SignupPage() {
       setBillingInterval("annual");
     }
     const join = params.get("join") || params.get("code");
-    if (join) setJoinCode(join);
+    if (join) {
+      setJoinCode(join);
+      setPendingJoinCode(join);
+    }
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -74,7 +82,8 @@ export default function SignupPage() {
     const email = (formData.get("email") as string)?.trim() ?? "";
 
     try {
-      const result = await signUpClient(firstName, lastName, email, password);
+      const postAuthNext = joinCode ? joinFamilyPath(joinCode) : undefined;
+      const result = await signUpClient(firstName, lastName, email, password, postAuthNext);
 
       if ("error" in result && result.error) {
         setError(result.error);
@@ -102,12 +111,14 @@ export default function SignupPage() {
           await startPlanTrial(planKey);
         }
         const destination = joinCode ? joinFamilyPath(joinCode) : "/dashboard/welcome";
+        clearPendingJoin();
         window.location.href = destination;
         return;
       }
 
       if ("success" in result && result.success === "verify_email") {
         sessionStorage.setItem("homepin:pending-email", email);
+        if (joinCode) setPendingJoinCode(joinCode);
         window.location.href = "/verify-email";
         return;
       }
@@ -119,6 +130,10 @@ export default function SignupPage() {
       setLoading(false);
     }
   }
+
+  const loginHref = joinCode
+    ? loginPathWithNext(joinFamilyPath(joinCode))
+    : "/login?force=1";
 
   return (
     <div>
@@ -274,7 +289,7 @@ export default function SignupPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login?force=1" className="font-medium text-primary hover:underline">
+        <Link href={loginHref} className="font-medium text-primary hover:underline">
           Sign in
         </Link>
       </p>

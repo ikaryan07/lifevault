@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { sendEmail } from "@/lib/services/email";
+import { getServerSiteUrl } from "@/lib/auth/site-url";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
@@ -41,6 +42,8 @@ export async function GET(request: Request) {
   }
 
   let sent = 0;
+  let skipped = 0;
+  const siteUrl = getServerSiteUrl();
   for (const [userId, docTitles] of userMap.entries()) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -54,7 +57,7 @@ export async function GET(request: Request) {
     const moreCount = docTitles.length > 3 ? ` and ${docTitles.length - 3} more` : "";
 
     try {
-      await sendEmail({
+      const result = await sendEmail({
         to: profile.email,
         subject: `HomePin: Some of your documents may need reviewing`,
         html: `
@@ -75,7 +78,7 @@ export async function GET(request: Request) {
                 No action needed if everything is still correct — this is just a gentle reminder.
               </p>
               <div style="text-align: center; margin: 25px 0;">
-                <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/vault" style="background: #1a5276; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                <a href="${siteUrl}/dashboard/vault" style="background: #1a5276; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                   Review My Documents
                 </a>
               </div>
@@ -83,11 +86,12 @@ export async function GET(request: Request) {
           </div>
         `,
       });
-      sent++;
+      if (result.success) sent++;
+      else skipped++;
     } catch (err) {
       console.error(`Failed to send freshness reminder to ${profile.email}:`, err);
     }
   }
 
-  return NextResponse.json({ message: `Sent ${sent} freshness reminders` });
+  return NextResponse.json({ message: `Sent ${sent} freshness reminders (${skipped} skipped)` });
 }

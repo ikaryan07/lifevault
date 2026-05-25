@@ -9,16 +9,20 @@ import { MapPin, ArrowRight, Mail } from "lucide-react";
 import { resendVerificationEmail } from "@/lib/auth/client";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { pendingJoinRedirectPath } from "@/lib/auth/pending-join";
+import { loginPathWithNext } from "@/lib/auth/safe-redirect";
 
 export default function VerifyEmailPage() {
   const [email, setEmail] = useState("");
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [error, setError] = useState("");
+  const [postAuthNext, setPostAuthNext] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("homepin:pending-email");
     if (stored) setEmail(stored);
+    setPostAuthNext(pendingJoinRedirectPath());
   }, []);
 
   async function handleResend(e: React.FormEvent) {
@@ -32,7 +36,7 @@ export default function VerifyEmailPage() {
     setError("");
     setResent(false);
 
-    const result = await resendVerificationEmail(email);
+    const result = await resendVerificationEmail(email, postAuthNext ?? undefined);
     if ("error" in result && result.error) {
       setError(result.error);
     } else {
@@ -40,6 +44,8 @@ export default function VerifyEmailPage() {
     }
     setResending(false);
   }
+
+  const loginHref = loginPathWithNext(postAuthNext);
 
   return (
     <div className="text-center">
@@ -56,7 +62,8 @@ export default function VerifyEmailPage() {
       <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
       <p className="mx-auto mt-3 max-w-sm text-base text-muted-foreground">
         We&apos;ve sent a verification link{email ? ` to ${email}` : ""}. Click the link to
-        activate your vault.
+        activate your vault
+        {postAuthNext?.startsWith("/join-family") ? " and join your family" : ""}.
       </p>
       <p className="mt-4 text-sm text-muted-foreground">
         It may take a minute to arrive. Check your spam folder if you don&apos;t see it.
@@ -93,10 +100,7 @@ export default function VerifyEmailPage() {
       )}
 
       <div className="mt-8">
-        <Link
-          href="/login?force=1"
-          className={cn(buttonVariants({ variant: "outline" }), "gap-2")}
-        >
+        <Link href={loginHref} className={cn(buttonVariants({ variant: "outline" }), "gap-2")}>
           Continue to sign in
           <ArrowRight className="h-4 w-4" />
         </Link>

@@ -13,6 +13,8 @@ import {
 } from "@/lib/auth/client";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { getSiteUrl } from "@/lib/auth/site-url";
+import { safeRedirectPath, signupPathWithJoin } from "@/lib/auth/safe-redirect";
+import { getPendingJoinCode } from "@/lib/auth/pending-join";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +40,10 @@ export default function LoginPage() {
       const next = params.get("next") ?? "";
       const joinMatch = next.match(/^\/join-family\/([a-z0-9]+)$/i);
       if (joinMatch) {
-        setSignupHref(`/signup?join=${encodeURIComponent(joinMatch[1])}`);
+        setSignupHref(signupPathWithJoin(joinMatch[1]));
+      } else {
+        const pendingJoin = getPendingJoinCode();
+        if (pendingJoin) setSignupHref(signupPathWithJoin(pendingJoin));
       }
 
       setReady(true);
@@ -70,8 +75,10 @@ export default function LoginPage() {
         return;
       }
 
-      const next = new URLSearchParams(window.location.search).get("next");
-      window.location.href = next && next.startsWith("/") ? next : "/dashboard";
+      const next = safeRedirectPath(
+        new URLSearchParams(window.location.search).get("next")
+      );
+      window.location.href = next ?? "/dashboard";
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

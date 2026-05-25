@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "@/lib/auth/demo";
+import { safeRedirectPath } from "@/lib/auth/safe-redirect";
 
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -61,10 +62,10 @@ export async function middleware(request: NextRequest) {
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set(
-      "next",
-      `${request.nextUrl.pathname}${request.nextUrl.search}`
-    );
+    url.search = "";
+    const returnPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+    const safeNext = safeRedirectPath(returnPath);
+    if (safeNext) url.searchParams.set("next", safeNext);
     if (isJoinFamily) {
       url.searchParams.set("force", "1");
     }
@@ -72,11 +73,11 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isAuthPage && request.nextUrl.searchParams.get("force") !== "1") {
-    const url = request.nextUrl.clone();
-    const next = request.nextUrl.searchParams.get("next");
-    url.pathname = next && next.startsWith("/") ? next : "/dashboard";
-    url.search = "";
-    return NextResponse.redirect(url);
+    const next = safeRedirectPath(request.nextUrl.searchParams.get("next"));
+    if (next) {
+      return NextResponse.redirect(new URL(next, request.url));
+    }
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return supabaseResponse;

@@ -9,6 +9,7 @@ import { MapPin, Users } from "lucide-react";
 import { joinFamilyByInviteCode } from "@/lib/actions/family-hub";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { joinFamilyPath, normalizeInviteCode } from "@/lib/auth/site-url";
+import { clearPendingJoin } from "@/lib/auth/pending-join";
 
 type JoinFamilyFormProps = {
   initialCode?: string;
@@ -42,6 +43,7 @@ export function JoinFamilyForm({ initialCode = "", autoJoin = false }: JoinFamil
       return;
     }
 
+    clearPendingJoin();
     window.location.href = "/dashboard/family/members";
   }
 
@@ -58,6 +60,7 @@ export function JoinFamilyForm({ initialCode = "", autoJoin = false }: JoinFamil
         setLoading(false);
         return;
       }
+      clearPendingJoin();
       window.location.href = "/dashboard/family/members";
     })();
   }, [autoJoin, initialCode]);

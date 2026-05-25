@@ -123,13 +123,23 @@ export async function migrateLocalLegacyToCloud(local: LegacyVaultData): Promise
 
   try {
     const { supabase, user } = await requireUser();
-    const existing = await fetchLegacyVaultData();
-    if (!existing) return { migrated: false };
+
+    const [tc, ic, da, dc, clBefore, clAfter] = await Promise.all([
+      supabase.from("trusted_contacts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("important_contacts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("digital_assets").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("documents").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("checklist_progress").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("list_type", "before"),
+      supabase.from("checklist_progress").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("list_type", "after"),
+    ]);
 
     const hasCloud =
-      existing.trustedContacts.length > 0 ||
-      existing.documents.length > 0 ||
-      existing.importantContacts.length > 0;
+      (tc.count ?? 0) > 0 ||
+      (ic.count ?? 0) > 0 ||
+      (da.count ?? 0) > 0 ||
+      (dc.count ?? 0) > 0 ||
+      (clBefore.count ?? 0) > 0 ||
+      (clAfter.count ?? 0) > 0;
 
     if (hasCloud) return { migrated: false };
 

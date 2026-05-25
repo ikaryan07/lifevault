@@ -1,15 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useVault } from "@/lib/store";
 import { updateFamilyName } from "@/lib/actions/family-hub";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { PageTransition } from "@/components/motion/page-transition";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Copy, Check, Crown, Link2, Share2 } from "lucide-react";
+import { Users, Copy, Check, Crown, Link2, Share2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { joinFamilyUrl } from "@/lib/auth/site-url";
 
@@ -27,7 +28,17 @@ function MembersSkeleton() {
 }
 
 export default function FamilyMembersPage() {
-  const { cloudMode, family, refreshCloud, isHydrated, cloudLoading } = useVault();
+  const {
+    cloudMode,
+    family,
+    refreshCloud,
+    isHydrated,
+    cloudLoading,
+    plan,
+    isOwner,
+    subscriptionLoading,
+    encryptionReady,
+  } = useVault();
   const [familyName, setFamilyName] = useState("");
   const [copied, setCopied] = useState(false);
   const [savingName, setSavingName] = useState(false);
@@ -61,6 +72,7 @@ export default function FamilyMembersPage() {
   }
 
   const inviteUrl = family ? joinFamilyUrl(family.inviteCode) : "";
+  const needsUpgradeToInvite = isOwner && plan.id === "free" && !subscriptionLoading;
 
   async function copyInvite() {
     if (!inviteUrl) return;
@@ -122,6 +134,38 @@ export default function FamilyMembersPage() {
           <MembersSkeleton />
         ) : (
           <>
+            {needsUpgradeToInvite && (
+              <Card className="border-amber-500/40 bg-amber-500/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+                    <Sparkles className="h-5 w-5" />
+                    Start a Family trial before inviting people
+                  </CardTitle>
+                  <CardDescription className="text-amber-900/80 dark:text-amber-100/80">
+                    The Free plan is solo only. Your family won&apos;t be able to join until you
+                    start a 14-day Family trial (no card required) or subscribe.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link href="/dashboard/settings/plan" className={buttonVariants()}>
+                    Start Family trial
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
+            {!encryptionReady && cloudMode && (
+              <Card className="border-destructive/40 bg-destructive/5">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Password encryption not configured</CardTitle>
+                  <CardDescription>
+                    Set <code className="text-xs">ENCRYPTION_SECRET</code> in Vercel — family
+                    passwords cannot be saved until this is fixed.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -152,6 +196,7 @@ export default function FamilyMembersPage() {
                           variant="outline"
                           className="shrink-0 sm:min-w-24"
                           onClick={shareInvite}
+                          disabled={needsUpgradeToInvite}
                         >
                           <Share2 className="mr-2 h-4 w-4" />
                           Share
@@ -161,6 +206,7 @@ export default function FamilyMembersPage() {
                           variant="outline"
                           className="shrink-0 sm:min-w-24"
                           onClick={copyInvite}
+                          disabled={needsUpgradeToInvite}
                         >
                           {copied ? (
                             <>

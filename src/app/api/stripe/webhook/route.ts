@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { hasAdminClient } from "@/lib/supabase/admin";
 import {
   isStripeConfigured,
   getStripe,
@@ -61,6 +61,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
   }
 
+  if (!hasAdminClient()) {
+    console.error("Stripe webhook: SUPABASE_SERVICE_ROLE_KEY is not configured");
+    return NextResponse.json(
+      { error: "Server misconfigured — service role key required for webhooks" },
+      { status: 503 }
+    );
+  }
+
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
@@ -78,10 +86,6 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-
-  // Service role not required — updates go through server client with user's RLS?
-  // Webhook runs without user — need service role for family updates
-  // For now use createClient which may fail RLS. Add service role client.
 
   try {
     switch (event.type) {
@@ -102,9 +106,6 @@ export async function POST(request: Request) {
     console.error("Stripe webhook error:", e);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
-
-  // Touch supabase to ensure module loads (webhook uses service in setFamilyPlanFromStripe)
-  await createClient();
 
   return NextResponse.json({ received: true });
 }

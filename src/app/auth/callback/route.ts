@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { safeRedirectPath } from "@/lib/auth/safe-redirect";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -11,8 +12,7 @@ export async function GET(request: NextRequest) {
 
   const defaultNext =
     type === "recovery" ? "/dashboard/settings" : "/dashboard/welcome";
-  const next =
-    nextParam && nextParam.startsWith("/") ? nextParam : defaultNext;
+  const next = safeRedirectPath(nextParam) ?? defaultNext;
 
   const redirectTarget = new URL(next, origin);
 

@@ -170,7 +170,11 @@ export async function setFamilyPlanFromStripe(
     trialEndsAt?: string | null;
   }
 ) {
-  const supabase = hasAdminClient() ? createAdminClient() : await createClient();
+  if (!hasAdminClient()) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for Stripe webhook plan updates");
+  }
+
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("families")
     .update({

@@ -32,10 +32,11 @@ async function lookupFamilyByInviteCode(
 
   if (hasAdminClient()) {
     const admin = createAdminClient();
-    const { data: rows } = await admin.from("families").select("id, name, invite_code");
-    const match = rows?.find(
-      (f) => normalizeInviteCode(String(f.invite_code ?? "")) === normalized
-    );
+    const { data: match } = await admin
+      .from("families")
+      .select("id, name")
+      .eq("invite_code", normalized)
+      .maybeSingle();
     if (match) return { id: match.id, name: match.name };
   }
 
@@ -282,6 +283,135 @@ export async function joinFamilyByInviteCode(code: string) {
   return { success: true, familyName: family.name };
 }
 
+function mapCredentialRows(
+  rows: Array<Record<string, unknown>>,
+  scope: string,
+  canDecrypt: boolean
+): SharedCredential[] {
+  return rows.map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    category: row.category as CredentialCategory,
+    username: (row.username as string) ?? "",
+    password:
+      canDecrypt && row.password_ciphertext
+        ? decryptSecret(row.password_ciphertext as string, (row.password_iv as string) ?? "", scope)
+        : "",
+    url: (row.url as string) ?? "",
+    pin:
+      canDecrypt && row.pin_ciphertext
+        ? decryptSecret(row.pin_ciphertext as string, (row.pin_iv as string) ?? "", scope)
+        : "",
+    notes: (row.notes as string) ?? "",
+    updatedAt: (row.updated_at as string) ?? (row.created_at as string),
+  }));
+}
+
+function mapHouseholdRows(
+  rows: Array<Record<string, unknown>>,
+  scope: string,
+  canDecrypt: boolean
+): HouseholdItem[] {
+  return rows.map((row) => ({
+    id: row.id as string,
+    label: row.label as string,
+    category: row.category as HouseholdCategory,
+    value:
+      canDecrypt && row.value_ciphertext
+        ? decryptSecret(row.value_ciphertext as string, (row.value_iv as string) ?? "", scope)
+        : "",
+    notes: (row.notes as string) ?? "",
+    updatedAt: (row.updated_at as string) ?? (row.created_at as string),
+  }));
+}
+
+async function buildFamilyInfo(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  familyId: string,
+  familyRow: { id: string; name: string; invite_code: string | null; owner_id: string }
+): Promise<FamilyInfo> {
+  const inviteCode = await ensureInviteCodeOnFamily(supabase, familyRow.id, familyRow.invite_code);
+
+  const { data: members, error: memErr } = await supabase
+    .from("family_members")
+    .select("id, user_id, role, display_name, joined_at")
+    .eq("family_id", familyId)
+    .eq("status", "active");
+
+  if (memErr) throw new Error(memErr.message);
+
+  const userIds = (members ?? []).map((m) => m.user_id);
+  const { data: profiles } = userIds.length
+    ? await supabase.from("profiles").select("id, email, first_name, last_name").in("id", userIds)
+    : { data: [] as Array<{ id: string; email: string; first_name: string | null; last_name: string | null }> };
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const myMembership = members?.find((m) => m.user_id === userId);
+
+  const memberList: FamilyMemberInfo[] = (members ?? []).map((m) => {
+    const p = profileMap.get(m.user_id);
+    const name =
+      m.display_name?.trim() ||
+      [p?.first_name, p?.last_name].filter(Boolean).join(" ").trim() ||
+      p?.email ||
+      "Family member";
+    return {
+      id: m.id,
+      userId: m.user_id,
+      role: m.role,
+      displayName: name,
+      email: p?.email ?? "",
+      joinedAt: m.joined_at,
+    };
+  });
+
+  return {
+    id: familyRow.id,
+    name: familyRow.name,
+    inviteCode,
+    role: myMembership?.role ?? "member",
+    members: memberList,
+  };
+}
+
+export async function fetchFamilyHubBundle(): Promise<{
+  credentials: SharedCredential[];
+  household: HouseholdItem[];
+  family: FamilyInfo | null;
+  cloudEnabled: boolean;
+  encryptionReady: boolean;
+} | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  const { supabase, user } = await requireUser();
+  const familyId = await ensureFamily(supabase, user.id);
+  const scope = encryptScope(familyId);
+  const canDecrypt = hasEncryptionSecret();
+
+  const [familyRes, credRes, houseRes] = await Promise.all([
+    supabase.from("families").select("id, name, invite_code, owner_id").eq("id", familyId).single(),
+    supabase.from("shared_credentials").select("*").eq("family_id", familyId).order("created_at"),
+    supabase.from("household_items").select("*").eq("family_id", familyId).order("created_at"),
+  ]);
+
+  if (credRes.error) throw new Error(credRes.error.message);
+  if (houseRes.error) throw new Error(houseRes.error.message);
+
+  let family: FamilyInfo | null = null;
+  if (!familyRes.error && familyRes.data) {
+    family = await buildFamilyInfo(supabase, user.id, familyId, familyRes.data);
+  }
+
+  return {
+    credentials: mapCredentialRows(credRes.data ?? [], scope, canDecrypt),
+    household: mapHouseholdRows(houseRes.data ?? [], scope, canDecrypt),
+    family,
+    cloudEnabled: true,
+    encryptionReady: canDecrypt,
+  };
+}
+
 export async function fetchFamilyHubData(): Promise<{
   credentials: SharedCredential[];
   household: HouseholdItem[];
@@ -303,37 +433,11 @@ export async function fetchFamilyHubData(): Promise<{
   if (credRes.error) throw new Error(credRes.error.message);
   if (houseRes.error) throw new Error(houseRes.error.message);
 
-  const credentials: SharedCredential[] = (credRes.data ?? []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    category: row.category as CredentialCategory,
-    username: row.username ?? "",
-    password:
-      canDecrypt && row.password_ciphertext
-        ? decryptSecret(row.password_ciphertext, row.password_iv ?? "", scope)
-        : "",
-    url: row.url ?? "",
-    pin:
-      canDecrypt && row.pin_ciphertext
-        ? decryptSecret(row.pin_ciphertext, row.pin_iv ?? "", scope)
-        : "",
-    notes: row.notes ?? "",
-    updatedAt: row.updated_at ?? row.created_at,
-  }));
-
-  const household: HouseholdItem[] = (houseRes.data ?? []).map((row) => ({
-    id: row.id,
-    label: row.label,
-    category: row.category as HouseholdCategory,
-    value:
-      canDecrypt && row.value_ciphertext
-        ? decryptSecret(row.value_ciphertext, row.value_iv ?? "", scope)
-        : "",
-    notes: row.notes ?? "",
-    updatedAt: row.updated_at ?? row.created_at,
-  }));
-
-  return { credentials, household, cloudEnabled: true };
+  return {
+    credentials: mapCredentialRows(credRes.data ?? [], scope, canDecrypt),
+    household: mapHouseholdRows(houseRes.data ?? [], scope, canDecrypt),
+    cloudEnabled: true,
+  };
 }
 
 export async function saveCredential(credential: SharedCredential, isNew: boolean) {

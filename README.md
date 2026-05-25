@@ -40,6 +40,9 @@ Run in Supabase SQL Editor, in order:
 3. `supabase/migrations/003_invite_code_lookup.sql`
 4. `supabase/migrations/004_subscriptions.sql`
 5. `supabase/migrations/005_production_ready.sql` — vault access RLS, storage bucket, invite policies
+6. `supabase/migrations/006_fix_family_join.sql` — invite join validation (required for family invites)
+
+Or run `supabase/run_003_006_invite.sql` after step 2 if you already ran 001–002.
 
 ## Stripe (when ready)
 
