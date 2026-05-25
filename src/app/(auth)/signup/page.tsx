@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Eye, EyeOff, Check, Sparkles } from "lucide-react";
 import { completeDemoSignUp, signUpClient } from "@/lib/auth/client";
+import { startPlanTrial } from "@/lib/actions/subscription";
 import { storageKeys } from "@/lib/storage-keys";
+import type { PlanId } from "@/lib/plans";
 
 const planLabels: Record<string, { name: string; tagline: string }> = {
   family: { name: "Family", tagline: "14-day free trial — no card required" },
@@ -41,7 +43,7 @@ export default function SignupPage() {
     if (planLabels[planKey]) {
       setSelectedPlan(planLabels[planKey]);
     }
-    const join = params.get("join");
+    const join = params.get("join") || params.get("code");
     if (join) setJoinCode(join);
   }, []);
 
@@ -85,6 +87,10 @@ export default function SignupPage() {
         "hasSession" in result &&
         result.hasSession
       ) {
+        const planKey = new URLSearchParams(window.location.search).get("plan") as PlanId | null;
+        if (planKey === "family" || planKey === "legacy") {
+          await startPlanTrial(planKey);
+        }
         const destination = joinCode
           ? `/join-family?code=${encodeURIComponent(joinCode)}`
           : "/dashboard/welcome";

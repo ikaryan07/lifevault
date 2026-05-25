@@ -34,6 +34,9 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/motion/page-transition";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PlanGate } from "@/components/subscription/plan-gate";
+import { useVault } from "@/lib/store";
+import { hasLegacyAccess } from "@/lib/plans";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +72,7 @@ interface MessageRow {
 }
 
 export default function MessagesPage() {
+  const { plan } = useVault();
   const [messages, setMessages] = useState<Message[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -268,6 +272,14 @@ export default function MessagesPage() {
   const messageToDelete = deleteId
     ? messages.find((m) => m.id === deleteId)
     : null;
+
+  if (!hasLegacyAccess(plan.id)) {
+    return (
+      <PageTransition>
+        <PlanGate feature="video_messages" />
+      </PageTransition>
+    );
+  }
 
   if (loading) {
     return (

@@ -32,7 +32,7 @@ function JoinFamilyContent() {
     setError("");
 
     const result = await joinFamilyByInviteCode(code);
-    if (result.error) {
+    if ("error" in result && result.error) {
       setError(result.error);
       setLoading(false);
       return;

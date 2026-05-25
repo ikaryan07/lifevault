@@ -59,6 +59,7 @@ export function useVaultCloud(
       if (!cloudMode) return { entry };
       const result = await saveCredential(entry, isNew);
       if ("error" in result && result.error) return { error: result.error };
+      if (!("id" in result)) return { error: "Save failed" };
       const saved: SharedCredential = {
         ...entry,
         id: result.id ?? entry.id,
@@ -82,6 +83,7 @@ export function useVaultCloud(
       if (!cloudMode) return { item };
       const result = await saveHouseholdItem(item, isNew);
       if ("error" in result && result.error) return { error: result.error };
+      if (!("id" in result)) return { error: "Save failed" };
       const saved: HouseholdItem = {
         ...item,
         id: result.id ?? item.id,

@@ -4,7 +4,10 @@ import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SkipLink } from "@/components/accessibility/skip-link";
+import { getServerSiteUrl } from "@/lib/auth/site-url";
 import "./globals.css";
+
+const siteUrl = getServerSiteUrl();
 
 const inter = Inter({
   variable: "--font-sans",
@@ -16,7 +19,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://homepin.com.au"),
+  metadataBase: new URL(siteUrl),
   title: "HomePin — Your Family's Passwords & Future, Secured",
   description:
     "One secure place for your family's shared passwords, household info, and important documents. Plus complete end-of-life planning. Australian-made.",
@@ -30,12 +33,11 @@ export const metadata: Metadata = {
     "family documents",
     "shared logins",
   ],
-  manifest: "/manifest.json",
   openGraph: {
     title: "HomePin — Your Family's Passwords & Future, Secured",
     description:
       "One secure place for your family's shared passwords, household info, and important documents. Plus complete end-of-life planning.",
-    url: "https://homepin.com.au",
+    url: siteUrl,
     siteName: "HomePin",
     locale: "en_AU",
     type: "website",
@@ -47,7 +49,7 @@ export const metadata: Metadata = {
       "One secure place for your family's shared passwords, household info, and important documents. Australian-made.",
   },
   alternates: {
-    canonical: "https://homepin.com.au",
+    canonical: siteUrl,
   },
 };
 

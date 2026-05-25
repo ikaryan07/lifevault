@@ -37,6 +37,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DOCUMENT_CATEGORIES, type DocumentCategory } from "@/types";
 import { PageTransition } from "@/components/motion/page-transition";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  saveDocumentBlob,
+  loadDocumentBlob,
+  deleteDocumentBlob,
+} from "@/lib/document-blobs";
 
 export default function VaultPage() {
   const { documents, setDocuments, plan, isHydrated } = useVault();
@@ -109,28 +114,52 @@ export default function VaultPage() {
   function handleUpload() {
     if (!selectedFile) return;
 
+    const id = crypto.randomUUID();
     const newDoc: StoredDocument = {
-      id: crypto.randomUUID(),
+      id,
       title: uploadTitle || selectedFile.name,
       category: uploadCategory,
       fileName: selectedFile.name,
       fileSize: selectedFile.size,
+      mimeType: selectedFile.type,
+      hasFile: true,
       notes: uploadNotes || undefined,
       uploadedAt: new Date().toISOString(),
     };
 
-    setDocuments((prev) => [newDoc, ...prev]);
-    resetUploadForm();
-    setUploadOpen(false);
-    toast.success("Document saved", {
-      description: `"${newDoc.title}" has been saved to your vault.`,
-      icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
-    });
+    saveDocumentBlob(id, selectedFile)
+      .then(() => {
+        setDocuments((prev) => [newDoc, ...prev]);
+        resetUploadForm();
+        setUploadOpen(false);
+        toast.success("Document saved", {
+          description: `"${newDoc.title}" is stored securely on this device.`,
+          icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
+        });
+      })
+      .catch((err: Error) => {
+        toast.error(err.message || "Could not save file");
+      });
+  }
+
+  function downloadDocument(doc: StoredDocument) {
+    const stored = loadDocumentBlob(doc.id);
+    if (!stored) {
+      toast.error("File not found — it may have been saved on another device.");
+      return;
+    }
+    const url = URL.createObjectURL(stored.blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.fileName;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function confirmDelete() {
     if (!deleteId) return;
     const doc = documents.find((d) => d.id === deleteId);
+    deleteDocumentBlob(deleteId);
     setDocuments((prev) => prev.filter((d) => d.id !== deleteId));
     setSelectedDoc(null);
     setDeleteId(null);
@@ -491,6 +520,15 @@ export default function VaultPage() {
                   )}
 
                   <div className="flex gap-2">
+                    {selectedDoc.hasFile && (
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => downloadDocument(selectedDoc)}
+                      >
+                        Download
+                      </Button>
+                    )}
                     <Button
                       variant="destructive"
                       className="flex-1"

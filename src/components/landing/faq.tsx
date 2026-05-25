@@ -10,8 +10,12 @@ const faqs = [
     a: "Yes. All data is stored on Australian-hosted infrastructure (Supabase + Vercel), protected by AES-256 encryption at rest, TLS in transit, and Row Level Security so only you can access your vault. We never sell or share your information.",
   },
   {
+    q: "Who pays for a Family subscription?",
+    a: "Only the family owner pays. When they upgrade to Family ($6.99/month) or Legacy ($12.99/month), everyone they invite joins free and automatically sees the same shared passwords and household info. Legacy planning tools (documents, messages, trusted contacts) stay on each person's own account.",
+  },
+  {
     q: "What happens during the 14-day free trial?",
-    a: "You get full access to your chosen plan with no restrictions. No credit card is required to start. If you don't upgrade before the trial ends, you'll be moved to the Free plan — your data stays safe, you just can't add more beyond the free limits.",
+    a: "The family owner gets full access to the chosen plan for 14 days. No credit card is required until Stripe payments are connected. When the trial ends, the family moves to the Free plan — your data stays safe, but you can't add more beyond free limits until you upgrade again.",
   },
   {
     q: "Can I cancel anytime?",

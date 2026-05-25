@@ -9,6 +9,16 @@ import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { syncSupabaseProfileToStorage } from "@/lib/auth/sync-profile";
 import type { FamilyInfo } from "@/lib/actions/family-hub";
 import type { DocumentCategory, TrustedContact, ImportantContact } from "@/types";
+import {
+  getPlan,
+  PLANS,
+  type PlanId,
+  type PlanInfo,
+} from "@/lib/plans";
+import { useSubscription } from "@/lib/hooks/use-subscription";
+
+export type { PlanId, PlanInfo };
+export { PLANS, getPlan };
 
 export interface StoredDocument {
   id: string;
@@ -16,6 +26,8 @@ export interface StoredDocument {
   category: DocumentCategory;
   fileName: string;
   fileSize: number;
+  mimeType?: string;
+  hasFile?: boolean;
   notes?: string;
   uploadedAt: string;
 }
@@ -41,46 +53,6 @@ export interface UserProfile {
   email: string;
   createdAt: string;
 }
-
-export type PlanId = "free" | "family" | "legacy";
-
-export interface PlanInfo {
-  id: PlanId;
-  name: string;
-  price: string;
-  period: string;
-  limits: {
-    passwords: number;
-    household: number;
-    documents: number;
-    trustedContacts: number;
-    familyMembers: number;
-  };
-}
-
-export const PLANS: Record<PlanId, PlanInfo> = {
-  free: {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    limits: { passwords: 5, household: 5, documents: 5, trustedContacts: 1, familyMembers: 1 },
-  },
-  family: {
-    id: "family",
-    name: "Family",
-    price: "$6.99",
-    period: "/month",
-    limits: { passwords: Infinity, household: Infinity, documents: Infinity, trustedContacts: 3, familyMembers: 6 },
-  },
-  legacy: {
-    id: "legacy",
-    name: "Legacy",
-    price: "$12.99",
-    period: "/month",
-    limits: { passwords: Infinity, household: Infinity, documents: Infinity, trustedContacts: 10, familyMembers: 6 },
-  },
-};
 
 export type CredentialCategory =
   | "wifi"
@@ -152,6 +124,11 @@ interface VaultStore {
   setProfile: (p: UserProfile | null) => void;
   plan: PlanInfo;
   setPlan: (id: PlanId) => void;
+  refreshSubscription: () => Promise<void>;
+  subscriptionLoading: boolean;
+  isOwner: boolean;
+  trialEndsAt: string | null;
+  stripeConfigured: boolean;
   documents: StoredDocument[];
   setDocuments: Setter<StoredDocument[]>;
   trustedContacts: TrustedContact[];
@@ -227,10 +204,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const plan = PLANS[planId] ?? PLANS.free;
-  const setPlan = useCallback((id: PlanId) => setPlanIdRaw(id), [setPlanIdRaw]);
-
+  const subscription = useSubscription(planId);
   const { user } = useUser();
+  const cloudModeForPlan = isSupabaseConfigured() && !!user;
+  const plan = cloudModeForPlan ? subscription.plan : getPlan(planId);
+  const setPlan = useCallback((id: PlanId) => setPlanIdRaw(id), [setPlanIdRaw]);
 
   useEffect(() => {
     if (!user || !isSupabaseConfigured()) return;
@@ -260,6 +238,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       setProfile,
       plan,
       setPlan,
+      refreshSubscription: subscription.refresh,
+      subscriptionLoading: subscription.loading,
+      isOwner: subscription.isOwner,
+      trialEndsAt: subscription.trialEndsAt,
+      stripeConfigured: subscription.stripeConfigured,
       documents,
       setDocuments,
       trustedContacts,
@@ -285,7 +268,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       removeHousehold,
     }),
     [
-      profile, setProfile, plan, setPlan,
+      profile, setProfile, plan, setPlan, subscription,
       documents, setDocuments, trustedContacts, setTrustedContacts,
       importantContacts, setImportantContacts, digitalAssets, setDigitalAssets,
       checklist, setChecklist, sharedCredentials, setSharedCredentials,

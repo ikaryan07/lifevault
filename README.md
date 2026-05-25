@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HomePin
 
-## Getting Started
+Australian family password sharing and legacy planning app.
 
-First, run the development server:
+**Live:** [homepin.vercel.app](https://homepin.vercel.app)
+
+## What it does
+
+- **Family Hub** — shared passwords, household info, and family invites (cloud-synced via Supabase)
+- **Legacy Vault** — personal documents, trusted contacts, checklists, and messages
+- **Family billing** — one owner pays; invited members join free and share Family Hub data
+
+## Plans
+
+| Plan | Price | Who pays | What you get |
+|------|-------|----------|--------------|
+| Free | $0 | — | Solo use, limited items |
+| Family | $6.99/mo | Family owner | Unlimited shared passwords & household info, up to 6 members |
+| Legacy | $12.99/mo | Family owner | Everything in Family + legacy planning tools |
+
+See [SETUP.md](./SETUP.md) for full deployment instructions.
+
+## Quick start (local)
 
 ```bash
+npm install
+cp .env.local.example .env.local
+# Fill in Supabase URL, anon key, ENCRYPTION_SECRET
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database migrations
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run in Supabase SQL Editor, in order:
 
-## Learn More
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/run_002_family_only.sql` (or `002_family_sharing.sql`)
+3. `supabase/migrations/003_invite_code_lookup.sql`
+4. `supabase/migrations/004_subscriptions.sql`
 
-To learn more about Next.js, take a look at the following resources:
+## Stripe (when ready)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create Family and Legacy products/prices in Stripe Dashboard
+2. Add env vars: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_FAMILY`, `STRIPE_PRICE_LEGACY`
+3. Point webhook to `https://your-domain/api/stripe/webhook`
+4. Add `SUPABASE_SERVICE_ROLE_KEY` for webhook plan updates
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Without Stripe, family owners can start **14-day free trials** from Settings → Family plan.
 
-## Deploy on Vercel
+## Tech stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 · React 19 · TypeScript · Tailwind · Supabase · Stripe (optional)

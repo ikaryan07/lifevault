@@ -21,6 +21,8 @@ If you already ran step 1 and get "policy already exists" errors, run only `supa
 
 3. **`supabase/migrations/003_invite_code_lookup.sql`** — required for family invite codes to work (run after 002).
 
+4. **`supabase/migrations/004_subscriptions.sql`** — family-level plans, trials, and Stripe fields (run after 003).
+
 ## 3. Configure authentication
 
 In Supabase **Authentication → URL configuration**:
@@ -62,7 +64,23 @@ openssl rand -base64 32
 
 **Never commit `.env.local` to GitHub.**
 
-## 5. Deploy to Vercel
+## 5. Stripe payments (optional)
+
+Until Stripe is configured, family owners can start **14-day free trials** from Settings → Family plan.
+
+When ready to charge:
+
+1. Create **Family** ($6.99/mo) and **Legacy** ($12.99/mo) recurring prices in [Stripe Dashboard](https://dashboard.stripe.com).
+2. Add to Vercel / `.env.local`:
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `STRIPE_PRICE_FAMILY` — price ID for Family plan
+   - `STRIPE_PRICE_LEGACY` — price ID for Legacy plan
+   - `SUPABASE_SERVICE_ROLE_KEY` — required for webhook to update family plans
+3. Add webhook endpoint: `https://your-domain/api/stripe/webhook`
+4. Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+
+## 6. Deploy to Vercel
 
 1. Push code to GitHub.
 2. Import project at [vercel.com](https://vercel.com).

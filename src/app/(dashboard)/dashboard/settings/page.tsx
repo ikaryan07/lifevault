@@ -37,6 +37,7 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { updatePassword } from "@/lib/auth/actions";
 import { PageTransition } from "@/components/motion/page-transition";
 import { useVault, PLANS } from "@/lib/store";
+import { planSummary } from "@/lib/plans";
 
 interface NotificationPrefs {
   checkIn: boolean;
@@ -373,11 +374,7 @@ export default function SettingsPage() {
                   </Badge>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {plan.id === "free"
-                    ? "5 passwords, 5 household items, 5 documents, 1 trusted contact."
-                    : plan.id === "family"
-                      ? "Unlimited passwords, household info, documents. Up to 6 family members."
-                      : "Everything in Family, plus 10 trusted contacts, video messages, and more."}
+                  {planSummary(plan.id)}
                 </p>
               </div>
               <Link

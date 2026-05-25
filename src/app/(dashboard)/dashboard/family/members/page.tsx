@@ -95,7 +95,7 @@ export default function FamilyMembersPage() {
           <h1 className="text-2xl font-bold">Family members</h1>
           <p className="mt-1 text-muted-foreground">
             Everyone in your family sees the same passwords and household info. Mum adds the
-            WiFi â€” the kids see it instantly.
+            WiFi — the kids see it instantly.
           </p>
         </div>
 

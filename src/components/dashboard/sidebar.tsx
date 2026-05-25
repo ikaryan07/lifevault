@@ -33,6 +33,7 @@ const legacyVaultItems = [
   { href: "/dashboard/directory", label: "Key Contacts", icon: BookUser },
   { href: "/dashboard/digital", label: "Online Accounts", icon: Monitor },
   { href: "/dashboard/messages", label: "Messages", icon: Heart },
+  { href: "/dashboard/forms", label: "Forms & Resources", icon: BookUser },
   { href: "/dashboard/emergency-card", label: "Emergency Card", icon: QrCode },
 ];
 

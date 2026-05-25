@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Printer, Shield, Info } from "lucide-react";
 import { PageTransition } from "@/components/motion/page-transition";
+import { PlanGate } from "@/components/subscription/plan-gate";
+import { hasLegacyAccess } from "@/lib/plans";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useVault } from "@/lib/store";
 
 export default function EmergencyCardPage() {
   const cardRef = useRef<HTMLDivElement>(null);
-  const { profile } = useVault();
+  const { profile, plan } = useVault();
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState("");
 
@@ -61,6 +63,14 @@ export default function EmergencyCardPage() {
     if (!userId) return;
     QRCode.toDataURL(qrUrl, { width: 240, margin: 1 }).then(setQrDataUrl).catch(() => {});
   }, [qrUrl, userId]);
+
+  if (!hasLegacyAccess(plan.id)) {
+    return (
+      <PageTransition>
+        <PlanGate feature="emergency_card" />
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>

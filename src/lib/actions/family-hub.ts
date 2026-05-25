@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/auth/demo";
 import { encryptSecret, decryptSecret, hasEncryptionSecret } from "@/lib/crypto/server-secrets";
+import { assertCanAddFamilyMember, assertWithinLimit } from "@/lib/subscriptions/server";
 import type { SharedCredential, HouseholdItem, CredentialCategory, HouseholdCategory } from "@/lib/store";
 import { revalidatePath } from "next/cache";
 
@@ -201,6 +202,9 @@ export async function joinFamilyByInviteCode(code: string) {
     };
   }
 
+  const memberCheck = await assertCanAddFamilyMember(family.id);
+  if (memberCheck.error) return memberCheck;
+
   const meta = user.user_metadata as { first_name?: string; last_name?: string };
   const displayName = [meta?.first_name, meta?.last_name].filter(Boolean).join(" ").trim();
 
@@ -285,6 +289,15 @@ export async function saveCredential(credential: SharedCredential, isNew: boolea
   const { supabase, user } = await requireUser();
   const familyId = await ensureFamily(supabase, user.id);
 
+  if (isNew) {
+    const { count } = await supabase
+      .from("shared_credentials")
+      .select("id", { count: "exact", head: true })
+      .eq("family_id", familyId);
+    const limitCheck = await assertWithinLimit(user.id, "passwords", count ?? 0);
+    if (limitCheck.error) return limitCheck;
+  }
+
   const scope = encryptScope(familyId);
   const encPassword = encryptSecret(credential.password ?? "", scope);
   const encPin = encryptSecret(credential.pin ?? "", scope);
@@ -344,6 +357,15 @@ export async function saveHouseholdItem(item: HouseholdItem, isNew: boolean) {
 
   const { supabase, user } = await requireUser();
   const familyId = await ensureFamily(supabase, user.id);
+
+  if (isNew) {
+    const { count } = await supabase
+      .from("household_items")
+      .select("id", { count: "exact", head: true })
+      .eq("family_id", familyId);
+    const limitCheck = await assertWithinLimit(user.id, "household", count ?? 0);
+    if (limitCheck.error) return limitCheck;
+  }
 
   const scope = encryptScope(familyId);
   const encValue = encryptSecret(item.value, scope);
